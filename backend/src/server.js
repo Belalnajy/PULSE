@@ -55,18 +55,18 @@ app.get('/health', async (req, res) => {
   }
 });
 
-app.use('/api/auth', authRoutes);
-app.use('/api/subscription', subscriptionRoutes);
+app.use('/auth', authRoutes);
+app.use('/subscription', subscriptionRoutes);
 // app.use('/api/license', licenseRoutes);
 // app.use('/api/openai-key', openaiKeyRoutes);
-app.use('/api/chat', chatRoutes);
-app.use('/api/campaigns', campaignsRoutes);
-app.use('/api/profile', profileRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/support', supportRoutes);
-app.use('/api/payments', paymentsRoutes);
-app.use('/api/plans', require('./routes/plans'));
-app.use('/api/testimonials', require('./routes/testimonials'));
+app.use('/chat', chatRoutes);
+app.use('/campaigns', campaignsRoutes);
+app.use('/profile', profileRoutes);
+app.use('/admin', adminRoutes);
+app.use('/support', supportRoutes);
+app.use('/payments', paymentsRoutes);
+app.use('/plans', require('./routes/plans'));
+app.use('/testimonials', require('./routes/testimonials'));
 
 app.use(errorHandler);
 
