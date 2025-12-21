@@ -309,6 +309,10 @@ async function initDb() {
   await ensure('testimonials', (s) =>
     s.createTable('testimonials', (t) => {
       t.increments('id').primary();
+      t.integer('user_id')
+        .nullable()
+        .references('users.id')
+        .onDelete('SET NULL');
       t.string('name').notNullable();
       t.string('title').nullable();
       t.string('avatar').nullable();
@@ -320,6 +324,19 @@ async function initDb() {
       t.datetime('created_at').notNullable().defaultTo(db.fn.now());
     })
   );
+
+  const hasTestimonialUserId = await db.schema.hasColumn(
+    'testimonials',
+    'user_id'
+  );
+  if (!hasTestimonialUserId) {
+    await db.schema.alterTable('testimonials', (t) => {
+      t.integer('user_id')
+        .nullable()
+        .references('users.id')
+        .onDelete('SET NULL');
+    });
+  }
 }
 
 module.exports = { initDb };

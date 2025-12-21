@@ -59,7 +59,7 @@ router.post('/user', auth, async (req, res) => {
     // Insert testimonial
     const [id] = await db('testimonials').insert({
       user_id: userId,
-      name: user.name || user.email,
+      name: user.display_name || user.email,
       title: null,
       avatar: null,
       rating,

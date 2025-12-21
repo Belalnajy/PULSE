@@ -31,6 +31,9 @@ class MoyasarProvider extends BaseProvider {
       process.env.API_BASE_URL ||
       `http://localhost:${process.env.PORT || 5000}`;
     const callbackUrl = `${apiBaseUrl}/api/payments/callback`;
+    console.log(
+      `[Moyasar] Creating invoice for user ${user.id}, plan ${planId}. Callback: ${callbackUrl}`
+    );
 
     try {
       const response = await axios.post(
