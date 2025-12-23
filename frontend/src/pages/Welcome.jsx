@@ -81,6 +81,7 @@ export default function Welcome() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16 md:h-20">
             {/* Logo */}
+
             <div
               className="flex items-center gap-3 cursor-pointer"
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
@@ -163,6 +164,11 @@ export default function Welcome() {
           <div className="flex justify-center mb-10">
             <div className="relative group">
               <div className="absolute -inset-6 bg-linear-to-r from-brand-secondary via-brand-primary to-brand-secondary opacity-20 rounded-full blur-3xl group-hover:opacity-40 transition-all duration-700 animate-spin-slow"></div>
+              {/* Ping Animations */}
+              <div className="absolute inset-0 rounded-full bg-brand-primary/20 animate-ping-subtle" />
+              <div className="absolute inset-0 rounded-full bg-brand-secondary/20 animate-ping-subtle delay-700" />
+              <div className="absolute inset-0 rounded-full bg-brand-primary/10 animate-ping-subtle delay-1500" />
+
               <img
                 src="/Pulse-logo.png"
                 alt="Pulse"
