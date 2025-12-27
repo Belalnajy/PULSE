@@ -5,6 +5,8 @@
   --color-brand-dark-lighter: #161f2d;
   --color-brand-primary: #38bdf8;
   --color-brand-secondary: #00b894;
+  --color-brand-primary-light: #7dd3fc;
+  --color-brand-secondary-light: #55efc4;
 
   --font-sans: 'Inter', 'Noto Sans Arabic', sans-serif;
   --font-display: 'Outfit', 'Noto Sans Arabic', sans-serif;
@@ -183,7 +185,7 @@
   }
 
   .animate-shimmer {
-    animation: shimmer 2s linear infinite;
+    animation: shimmer 10s linear infinite;
   }
 
   .delay-100 {

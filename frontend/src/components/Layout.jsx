@@ -67,9 +67,6 @@ export default function Layout({ left, right }) {
             alt="Alva"
             className="w-8 h-8 md:w-10 md:h-10 rounded-full shadow-sm ring-2 ring-[#38bdf8]/60"
           />
-          <span className="hidden sm:block font-bold bg-linear-to-r from-brand-secondary to-brand-primary bg-clip-text text-transparent text-sm">
-            Made with care by Alva
-          </span>
 
           <div className="flex items-center gap-2 mr-2 md:mr-4 border-r border-white/10 pr-2 md:pr-4">
             {isActive ? (

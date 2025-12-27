@@ -161,9 +161,6 @@ export default function Login() {
           </button>
 
           <div className="text-center">
-            <div className="text-xs text-gray-500 font-medium" dir="ltr">
-              Made with care by Alva
-            </div>
             <div className="text-[10px] text-gray-600 mt-1">
               خصوصيتك محفوظة دائمًا
             </div>

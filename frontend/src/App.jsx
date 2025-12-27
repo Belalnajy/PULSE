@@ -203,9 +203,6 @@ function AppShell() {
             {/* Content Section */}
             <div className="loading-text-container">
               <div className="loading-text">يتم توليد المحتوى الإبداعي...</div>
-              <div className="loading-subtext">
-                بنوريك الميزة الحقيقية للذكاء الاصطناعي السعودي
-              </div>
             </div>
 
             {/* Progress Bar */}

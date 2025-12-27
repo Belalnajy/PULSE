@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import TestimonialsSection from '../components/TestimonialsSection';
 import AddTestimonialModal from '../components/AddTestimonialModal';
+import SupportRequestModal from '../components/SupportRequestModal';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api/client';
 import {
@@ -24,6 +25,14 @@ import {
   Ghost,
 } from 'lucide-react';
 import AnimatedCounter from '../components/AnimatedCounter';
+import {
+  FaTiktok,
+  FaInstagram,
+  FaSnapchat,
+  FaWhatsapp,
+  FaYoutube,
+} from 'react-icons/fa';
+import { FaXTwitter } from 'react-icons/fa6';
 
 export default function Welcome() {
   const { user } = useAuth();
@@ -31,6 +40,7 @@ export default function Welcome() {
   const [faqOpen, setFaqOpen] = useState(null);
   const [mounted, setMounted] = useState(false);
   const [ratingModalOpen, setRatingModalOpen] = useState(false);
+  const [supportOpen, setSupportOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [planPrice, setPlanPrice] = useState('50');
   const [planCurrency, setPlanCurrency] = useState('USD');
@@ -161,7 +171,7 @@ export default function Welcome() {
             mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}>
           {/* Brand Mark */}
-          <div className="flex justify-center mb-10">
+          <div className="flex justify-center mb-10 mt-16 md:mt-2">
             <div className="relative group">
               <div className="absolute -inset-6 bg-linear-to-r from-brand-secondary via-brand-primary to-brand-secondary opacity-20 rounded-full blur-3xl group-hover:opacity-40 transition-all duration-700 animate-spin-slow"></div>
               {/* Ping Animations */}
@@ -185,7 +195,7 @@ export default function Welcome() {
               <p className="block text-white opacity-90">
                 {' '}
                 مرحباً بك في{' '}
-                <span className="bg-linear-to-r from-brand-secondary via-white to-brand-primary bg-clip-text text-transparent drop-shadow-sm animate-shimmer">
+                <span className="bg-linear-to-r from-brand-secondary-light/70 via-white to-brand-primary-light/70 bg-clip-text text-transparent drop-shadow-sm animate-shimmer">
                   عالم Alva
                 </span>
               </p>
@@ -231,33 +241,10 @@ export default function Welcome() {
           </div>
         </div>
 
-        {/* Partners Section */}
-        <div
-          className={`mt-12 mb-24 transition-all duration-1000 delay-200 transform ${
-            mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
-          }`}>
-          <div className="text-center mb-10">
-            <span className="text-gray-500 text-xs font-bold tracking-[0.4em] uppercase">
-              نثق بهم & يثقون بنا
-            </span>
-          </div>
-          <div className="flex flex-wrap justify-center items-center gap-8 md:gap-20 opacity-30 grayscale hover:grayscale-0 transition-all duration-700">
-            {['TikTok', 'Instagram', 'Snapchat', 'WhatsApp', 'Twitter'].map(
-              (p) => (
-                <div key={p} className="flex items-center gap-3 group px-4">
-                  <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center font-display font-black text-sm group-hover:bg-brand-primary/10 group-hover:text-brand-primary transition-colors">
-                    {p[0]}
-                  </div>
-                  <span className="font-display font-bold text-2xl tracking-tighter group-hover:text-white transition-colors">
-                    {p.toUpperCase()}
-                  </span>
-                </div>
-              )
-            )}
-          </div>
-        </div>
-
         {/* Features Hub */}
+        <h2 className="text-3xl md:text-5xl font-display font-black text-white text-center">
+          ثلاث خطوات بسيطة للنجاح
+        </h2>
         <div
           id="features"
           className={`grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mb-20 md:mb-28 mt-16 md:mt-28 transition-all duration-1000 delay-300 transform ${
@@ -285,7 +272,63 @@ export default function Welcome() {
             description="استراتيجيات مبنية على بيانات واقعية تضمن وصول محتواك للجمهور الصحيح."
           />
         </div>
-
+        {/* Trust & Stats Section */}
+        <div
+          className={`border-y border-white/5 py-12 md:py-16 mb-20 md:mb-28 transition-all duration-1000 delay-500 ${
+            mounted ? 'opacity-100' : 'opacity-0'
+          }`}>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 text-center">
+            <StatCard
+              number={<AnimatedCounter target={10000} prefix="+" suffix="" />}
+              label="محتوى مُوَلَّد"
+              icon={<Sparkles className="w-12 h-12 text-brand-primary" />}
+            />
+            <StatCard
+              number={<AnimatedCounter target={2500} prefix="+" suffix="" />}
+              label="صانع محتوى"
+              icon={<Users className="w-12 h-12 text-brand-secondary" />}
+            />
+            <StatCard
+              number={<AnimatedCounter target={99} prefix="" suffix="%" />}
+              label="نسبة الرضا"
+              icon={<Star className="w-12 h-12 text-yellow-400 fill-current" />}
+            />
+            <StatCard
+              number="24/7"
+              label="دعم ذكي"
+              icon={<Headphones className="w-12 h-12 text-purple-400" />}
+            />
+          </div>
+        </div>
+        {/* Partners Section */}
+        {/* <div
+          className={`mt-12 mb-24 transition-all duration-1000 delay-200 transform ${
+            mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
+          }`}>
+          <div className="text-center mb-10">
+            <span className="text-gray-500 text-xs font-bold tracking-[0.4em] uppercase">
+              نثق بهم & يثقون بنا
+            </span>
+          </div>
+          <div className="flex flex-wrap justify-center items-center gap-6 md:gap-12 opacity-30 grayscale hover:grayscale-0 transition-all duration-700">
+            {[
+              { name: 'TikTok', icon: FaTiktok },
+              { name: 'Instagram', icon: FaInstagram },
+              { name: 'Snapchat', icon: FaSnapchat },
+              { name: 'WhatsApp', icon: FaWhatsapp },
+              { name: 'X', icon: FaXTwitter },
+            ].map((p) => (
+              <div key={p.name} className="flex items-center gap-3 group px-4">
+                <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center font-display font-black text-sm group-hover:bg-brand-primary/10 group-hover:text-brand-primary transition-colors">
+                  <p.icon className="w-6 h-6" />
+                </div>
+                <span className="font-display font-bold text-2xl tracking-tighter group-hover:text-white transition-colors hidden md:block">
+                  {p.name.toUpperCase()}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div> */}
         {/* How It Works Section */}
         <div
           id="how-it-works"
@@ -296,9 +339,6 @@ export default function Welcome() {
             <div className="inline-block px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-brand-primary text-sm font-medium tracking-wide mb-6">
               كيف يعمل Alva
             </div>
-            <h2 className="text-3xl md:text-5xl font-display font-black text-white">
-              ثلاث خطوات بسيطة للنجاح
-            </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 relative">
@@ -314,8 +354,8 @@ export default function Welcome() {
             />
             <HowItWorksStep
               number="2"
-              title="دع Alva يعمل"
-              description="الذكاء الاصطناعي يحلل ويختار أفضل استراتيجية لكل منصة"
+              title="دع PULSE يعمل"
+              description="PULSE يحلل ويختار أفضل استراتيجية لكل منصة"
               icon={<Sparkles className="w-12 h-12" />}
               color="brand-primary"
             />
@@ -349,64 +389,30 @@ export default function Welcome() {
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-6">
             <PlatformCard
               name="TikTok"
-              color="from-[#000000] to-[#25F4EE]"
-              icon={
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="w-8 h-8">
-                  <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.04-.1z" />
-                </svg>
-              }
+              color="from-[#000000]"
+              icon={<FaTiktok className="w-8 h-8" />}
             />
             <PlatformCard
               name="Instagram"
               color="from-[#833AB4] via-[#FD1D1D] to-[#FCAF45]"
-              icon={<Instagram className="w-8 h-8" />}
+              icon={<FaInstagram className="w-8 h-8" />}
             />
             <PlatformCard
-              name="X (Twitter)"
-              color="from-[#000000] to-[#1DA1F2]"
-              icon={<Twitter className="w-8 h-8" />}
+              name="X"
+              color="from-[#000000] to-[#14171A]"
+              icon={<FaXTwitter className="w-8 h-8" />}
             />
             <PlatformCard
               name="Snapchat"
               color="from-[#FFFC00] to-[#FFFC00]"
-              icon={<Ghost className="w-10 h-10 text-black fill-current" />}
+              icon={
+                <FaSnapchat className="w-8 h-8 text-gray-900 fill-current" />
+              }
             />
             <PlatformCard
               name="WhatsApp"
               color="from-[#25D366] to-[#128C7E]"
-              icon={<MessageCircle className="w-8 h-8" />}
-            />
-          </div>
-        </div>
-
-        {/* Trust & Stats Section */}
-        <div
-          className={`border-y border-white/5 py-12 md:py-16 mb-20 md:mb-28 transition-all duration-1000 delay-500 ${
-            mounted ? 'opacity-100' : 'opacity-0'
-          }`}>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 text-center">
-            <StatCard
-              number={<AnimatedCounter target={10000} prefix="+" suffix="" />}
-              label="محتوى مُوَلَّد"
-              icon={<Sparkles className="w-12 h-12 text-brand-primary" />}
-            />
-            <StatCard
-              number={<AnimatedCounter target={2500} prefix="+" suffix="" />}
-              label="صانع محتوى"
-              icon={<Users className="w-12 h-12 text-brand-secondary" />}
-            />
-            <StatCard
-              number={<AnimatedCounter target={99} prefix="" suffix="%" />}
-              label="نسبة الرضا"
-              icon={<Star className="w-12 h-12 text-yellow-400 fill-current" />}
-            />
-            <StatCard
-              number="24/7"
-              label="دعم ذكي"
-              icon={<Headphones className="w-12 h-12 text-purple-400" />}
+              icon={<FaWhatsapp className="w-8 h-8" />}
             />
           </div>
         </div>
@@ -497,32 +503,32 @@ export default function Welcome() {
 
           <div className="max-w-3xl mx-auto space-y-4">
             <FAQItem
-              question="ما هو Alva وكيف يعمل؟"
-              answer="Alva هو مساعد ذكاء اصطناعي متخصص في إنشاء محتوى تسويقي احترافي لمنصات التواصل الاجتماعي. يستخدم تقنيات الذكاء الاصطناعي المتقدمة لفهم فكرتك وإنشاء محتوى مخصص لكل منصة."
+              question="ما هو PULSE وكيف يعمل؟"
+              answer="PULSE هو مساعدك التسويقي   متخصص في إنشاء محتوى تسويقي احترافي لمنصات التواصل الاجتماعي. يستخدم تقنيات متقدمه لفهم فكرتك وإنشاء محتوى مخصص لكل منصة."
               isOpen={faqOpen === 0}
               onClick={() => setFaqOpen(faqOpen === 0 ? null : 0)}
             />
             <FAQItem
-              question="هل يدعم Alva اللغة العربية؟"
-              answer="نعم! Alva مصمم خصيصاً للمحتوى العربي ويفهم الثقافة والأسلوب العربي في التسويق الرقمي."
+              question="هل يدعم PULSE اللغة العربية؟"
+              answer="نعم! PULSE مصمم خصيصاً للمحتوى العربي ويفهم الثقافة والأسلوب العربي السعودي في التسويق الرقمي."
               isOpen={faqOpen === 1}
               onClick={() => setFaqOpen(faqOpen === 1 ? null : 1)}
             />
             <FAQItem
               question="ما هي المنصات المدعومة؟"
-              answer="نحن ندعم TikTok، Instagram، X (Twitter)، Snapchat، وWhatsApp. كل منصة تحصل على محتوى مخصص يناسب جمهورها وخصائصها."
+              answer="PULSE يدعم TikTok، Instagram، X ، Snapchat، وWhatsApp. كل منصة تحصل على محتوى مخصص يناسب جمهورها وخصائصها."
               isOpen={faqOpen === 2}
               onClick={() => setFaqOpen(faqOpen === 2 ? null : 2)}
             />
             <FAQItem
               question="هل يمكنني تعديل المحتوى المُنشأ؟"
-              answer="بالتأكيد! يمكنك مراجعة وتعديل أي محتوى قبل نشره. Alva يوفر لك نقطة بداية قوية يمكنك تخصيصها حسب احتياجاتك."
+              answer="بالتأكيد! يمكنك مراجعة وتعديل أي محتوى قبل نشره. PULSE يوفر لك نقطة بداية قوية يمكنك تخصيصها حسب احتياجاتك."
               isOpen={faqOpen === 3}
               onClick={() => setFaqOpen(faqOpen === 3 ? null : 3)}
             />
             <FAQItem
               question="كم يستغرق إنشاء المحتوى؟"
-              answer="عادةً ما يستغرق الأمر أقل من دقيقة! فقط أدخل فكرتك ودع Alva يقوم بالباقي."
+              answer="عادةً ما يستغرق الأمر أقل من دقيقة! فقط أدخل فكرتك ودع PULSE يبدع من اجلك ."
               isOpen={faqOpen === 4}
               onClick={() => setFaqOpen(faqOpen === 4 ? null : 4)}
             />
@@ -537,11 +543,11 @@ export default function Welcome() {
           <div className="absolute top-0 left-0 w-64 h-64 bg-brand-primary/10 blur-[100px] -translate-x-1/2 -translate-y-1/2"></div>
           <div className="absolute bottom-0 right-0 w-64 h-64 bg-brand-secondary/10 blur-[100px] translate-x-1/2 translate-y-1/2"></div>
 
-          <h2 className="text-4xl md:text-6xl font-display font-black text-white mb-8 relative z-10">
-            جاهز لتغيير طريقة <br /> صناعة محتواك؟
+          <h2 className="text-4xl md:text-6xl font-display font-black text-white mb-8 relative z-10 leading-[1]">
+            جاهز لتغيير طريقة صناعة محتواك؟
           </h2>
           <p className="text-xl text-gray-400 mb-12 max-w-2xl mx-auto relative z-10">
-            انضم إلى أكثر من 2,500 صانع محتوى يستخدمون Alva يومياً للنمو
+            انضم إلى أكثر من 2,500 صانع محتوى يستخدمون PULSE يومياً للنمو
             والانتشار.
           </p>
           <div className="flex flex-col sm:flex-row gap-6 justify-center relative z-10">
@@ -550,8 +556,10 @@ export default function Welcome() {
               className="btn btn-primary px-12 py-5 rounded-2xl text-xl font-bold shadow-glow-strong">
               {user ? 'اذهب للوحة التحكم' : 'ابدأ رحلتك الآن'}
             </a>
-            <button className="px-12 py-5 bg-white/5 border border-white/10 text-white rounded-2xl font-bold text-xl hover:bg-white/10 transition-all">
-              تواصل مع المبيعات
+            <button
+              onClick={() => setSupportOpen(true)}
+              className="px-12 py-5 bg-white/5 border border-white/10 text-white rounded-2xl font-bold text-xl hover:bg-white/10 transition-all">
+              مساعدة
             </button>
           </div>
         </div>
@@ -576,12 +584,19 @@ export default function Welcome() {
                 نسعي في ALVA لتحسين الاداء التجاري للمنشئات وتطويرها
               </p>
               <div className="flex gap-4">
-                {[1, 2, 3, 4].map((i) => (
-                  <div
+                {[
+                  { icon: FaXTwitter, href: '#' },
+                  { icon: FaInstagram, href: '#' },
+                  { icon: FaTiktok, href: '#' },
+                  { icon: FaSnapchat, href: '#' },
+                  { icon: FaYoutube, href: '#' },
+                ].map((social, i) => (
+                  <a
                     key={i}
-                    className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:border-brand-primary/50 cursor-pointer transition-colors">
-                    <div className="w-4 h-4 bg-gray-500 rounded-sm"></div>
-                  </div>
+                    href={social.href}
+                    className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 hover:border-brand-primary/50 text-gray-400 hover:text-white cursor-pointer transition-all duration-300">
+                    <social.icon className="w-5 h-5" />
+                  </a>
                 ))}
               </div>
             </div>
@@ -684,7 +699,7 @@ export default function Welcome() {
 
           <div className="flex flex-col md:flex-row justify-between items-center gap-6 pt-12 border-t border-white/5">
             <div className="text-sm text-gray-600 font-medium">
-              © 2025 Pulse AI System. Crafted with precision by Alva Team
+              © 2025 Pulse Crafted with precision by Alva Team
             </div>
             <div className="flex gap-8 text-xs text-gray-700 font-bold uppercase tracking-widest">
               <span>Made in Saudi Arabia</span>
@@ -757,6 +772,12 @@ export default function Welcome() {
           setSuccessMessage(msg);
           setTimeout(() => setSuccessMessage(''), 5000);
         }}
+      />
+
+      <SupportRequestModal
+        open={supportOpen}
+        onClose={() => setSupportOpen(false)}
+        contactOnly={true}
       />
     </div>
   );
