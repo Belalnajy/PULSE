@@ -75,6 +75,23 @@ async function initDb() {
     });
   }
 
+  const hasResetOtp = await db.schema.hasColumn('users', 'reset_otp');
+  if (!hasResetOtp) {
+    await db.schema.alterTable('users', (t) => {
+      t.string('reset_otp').nullable();
+    });
+  }
+
+  const hasResetExpires = await db.schema.hasColumn(
+    'users',
+    'reset_otp_expires_at'
+  );
+  if (!hasResetExpires) {
+    await db.schema.alterTable('users', (t) => {
+      t.datetime('reset_otp_expires_at').nullable();
+    });
+  }
+
   const hasChatDaily = await db.schema.hasColumn('users', 'chat_daily_count');
   if (!hasChatDaily) {
     await db.schema.alterTable('users', (t) => {

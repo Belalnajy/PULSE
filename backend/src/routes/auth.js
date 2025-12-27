@@ -7,7 +7,7 @@ const { rateLimit } = require('../middleware/rateLimit');
 
 const router = express.Router();
 
-const { sendOtpEmail } = require('../services/email');
+const { sendOtpEmail, sendResetPasswordEmail } = require('../services/email');
 
 function generateOtp() {
   const n = Math.floor(100000 + Math.random() * 900000);
@@ -346,6 +346,127 @@ router.post(
         },
       },
     });
+  }
+);
+
+const forgotSchema = Joi.object({ email: Joi.string().email().required() });
+router.post(
+  '/forgot-password',
+  rateLimit({ windowMs: 60000, max: 5 }),
+  async (req, res) => {
+    const { error, value } = forgotSchema.validate(req.body);
+    if (error)
+      return res
+        .status(400)
+        .json({ success: false, error: { code: 400, message: error.message } });
+    const user = await db('users').where({ email: value.email }).first();
+    // For security, don't reveal if user exists. Just say "If exists, OTP sent".
+    // But since this is a private/targeted app, we can be more helpful.
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: { code: 404, message: 'المستخدم غير موجود' },
+      });
+    }
+
+    // Cooldown check for reset OTP
+    if (user.reset_otp_expires_at) {
+      const lastSent =
+        new Date(user.reset_otp_expires_at).getTime() - 15 * 60 * 1000;
+      const now = Date.now();
+      const diff = (now - lastSent) / 1000;
+      const cooldown = process.env.OTP_RESEND_COOLDOWN_SECONDS || 60;
+      if (diff < cooldown) {
+        return res.status(429).json({
+          success: false,
+          error: {
+            code: 'COOLDOWN',
+            message: `الرجاء الانتظار ${Math.ceil(
+              cooldown - diff
+            )} ثانية قبل إعادة الطلب`,
+            secondsLeft: Math.ceil(cooldown - diff),
+          },
+        });
+      }
+    }
+
+    const otp = generateOtp();
+    const otp_hash = await bcrypt.hash(otp, 10);
+    const expires = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+
+    await db('users')
+      .where({ id: user.id })
+      .update({ reset_otp: otp_hash, reset_otp_expires_at: expires });
+
+    const emailResult = await sendResetPasswordEmail(user.email, otp);
+
+    if (!emailResult.success) {
+      console.error('[Auth] Failed to send reset email:', emailResult.error);
+      return res.status(500).json({
+        success: false,
+        error: {
+          code: 'EMAIL_ERROR',
+          message: 'تعذر إرسال البريد الإلكتروني. يرجى المحاولة لاحقاً.',
+        },
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'تم إرسال رمز التحقق لبريدك الإلكتروني',
+    });
+  }
+);
+
+const resetSchema = Joi.object({
+  email: Joi.string().email().required(),
+  code: Joi.string()
+    .pattern(/^[0-9]{6}$/)
+    .required(),
+  newPassword: Joi.string().min(8).required(),
+});
+router.post(
+  '/reset-password',
+  rateLimit({ windowMs: 60000, max: 10 }),
+  async (req, res) => {
+    const { error, value } = resetSchema.validate(req.body);
+    if (error)
+      return res
+        .status(400)
+        .json({ success: false, error: { code: 400, message: error.message } });
+    const user = await db('users').where({ email: value.email }).first();
+    if (!user)
+      return res.status(404).json({
+        success: false,
+        error: { code: 404, message: 'المستخدم غير موجود' },
+      });
+
+    const notExpired =
+      user.reset_otp_expires_at &&
+      new Date(user.reset_otp_expires_at).getTime() > Date.now();
+    const otpOk = user.reset_otp
+      ? await bcrypt.compare(value.code, user.reset_otp)
+      : false;
+
+    if (!notExpired || !otpOk) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_OTP',
+          message: 'رمز التحقق غير صحيح أو منتهي الصلاحية',
+        },
+      });
+    }
+
+    const password_hash = await bcrypt.hash(value.newPassword, 10);
+    await db('users').where({ id: user.id }).update({
+      password_hash,
+      reset_otp: null,
+      reset_otp_expires_at: null,
+      force_password_change: 0,
+    });
+
+    res.json({ success: true, message: 'تم تغيير كلمة المرور بنجاح' });
   }
 );
 

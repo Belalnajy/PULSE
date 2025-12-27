@@ -122,4 +122,64 @@ async function sendExpiryReminderEmail(email, userName, daysLeft, expiryDate) {
   }
 }
 
-module.exports = { sendOtpEmail, sendExpiryReminderEmail };
+async function sendResetPasswordEmail(email, otp) {
+  try {
+    const info = await transporter.sendMail({
+      from: `"Pulse Support" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: 'تغيير كلمة المرور - Pulse',
+      html: `
+        <div dir="rtl" style="font-family: 'Segoe UI', Tahoma, sans-serif; max-width: 600px; margin: auto; padding: 30px; background: #0c131d; border-radius: 16px; color: #fff;">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 30px;">
+            <tr>
+              <td align="center">
+                <img src="https://alva-pulse-immq2mvaa5.edgeone.app/Pulse-logo.png" alt="Pulse" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;" />
+                <h1 style="color: #38bdf8; margin: 15px 0 5px; font-size: 28px;">Pulse</h1>
+              </td>
+            </tr>
+          </table>
+          
+          <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 25px; margin-bottom: 25px;">
+            <p style="font-size: 18px; margin: 0 0 15px; color: #e5e7eb;">طلب تغيير كلمة المرور 🔐</p>
+            <p style="color: #9ca3af; font-size: 15px; line-height: 1.8; margin-bottom: 25px;">
+              لقد تلقينا طلباً لتغيير كلمة المرور الخاصة بحسابك. يرجى استخدام الرمز التالي لإتمام العملية:
+            </p>
+            
+            <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; padding: 20px; text-align: center;">
+              <p style="font-size: 32px; font-weight: bold; color: #38bdf8; letter-spacing: 12px; margin: 0;">
+                ${otp}
+              </p>
+            </div>
+            
+            <p style="color: #9ca3af; font-size: 13px; margin: 25px 0 0; text-align: center;">
+              هذا الرمز صالح لمدة 15 دقيقة فقط.
+              <br />
+              إذا لم تقم بطلب هذا الرمز، يرجى تجاهل هذا البريد.
+            </p>
+          </div>
+          
+          <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; margin-top: 30px;">
+            <p style="font-size: 13px; color: #6b7280; text-align: center; margin: 0;">
+              &copy; ${new Date().getFullYear()} Pulse. جميع الحقوق محفوظة.
+            </p>
+          </div>
+        </div>
+      `,
+    });
+    console.log('[Email] Reset password OTP sent to %s', email);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error(
+      '[Email] Failed to send reset password OTP to %s:',
+      email,
+      error
+    );
+    return { success: false, error: error.message };
+  }
+}
+
+module.exports = {
+  sendOtpEmail,
+  sendExpiryReminderEmail,
+  sendResetPasswordEmail,
+};

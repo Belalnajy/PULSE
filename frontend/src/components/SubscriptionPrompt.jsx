@@ -10,9 +10,13 @@ export default function SubscriptionPrompt({ open, onClose, strict = false }) {
     trialDaily,
     subscriptionRequired,
     entitlements,
+    loadMe,
+    loadEntitlements,
     logout,
   } = useAuth();
   const [msg, setMsg] = useState('');
+  const [loadingVerify, setLoadingVerify] = useState(false);
+  const [verifyError, setVerifyError] = useState('');
   if (!open) return null;
   const isAdmin = !!(
     entitlements?.is_admin ??
@@ -54,9 +58,27 @@ export default function SubscriptionPrompt({ open, onClose, strict = false }) {
     }
   }
 
+  async function handleVerifySync() {
+    setVerifyError('');
+    setLoadingVerify(true);
+    try {
+      const res = await api('/api/payments/verify-my-last-session');
+      if (res.success) {
+        setMsg(res.message);
+        await Promise.all([loadMe(), loadEntitlements()]);
+      } else {
+        setVerifyError(res.message);
+      }
+    } catch (e) {
+      setVerifyError(e.message || 'تعذر التحقق من الدفع');
+    } finally {
+      setLoadingVerify(false);
+    }
+  }
+
   return createPortal(
     <div
-      className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[60] p-4 animate-fade-in"
+      className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-60 p-4 animate-fade-in"
       onClick={() => {
         if (!strict) onClose?.();
       }}>
@@ -67,7 +89,7 @@ export default function SubscriptionPrompt({ open, onClose, strict = false }) {
         <div className="absolute -top-20 -right-20 w-64 h-64 bg-brand-primary/10 rounded-full blur-[80px] pointer-events-none"></div>
 
         <div className="flex justify-center mb-6 relative">
-          <div className={`relative ${mustRenew ? 'grayscale-[50%]' : ''}`}>
+          <div className={`relative ${mustRenew ? 'grayscale-50' : ''}`}>
             <div className="absolute inset-0 bg-brand-primary/20 rounded-full blur-xl animate-pulse"></div>
             <img
               src="/Pulse-logo.png"
@@ -263,8 +285,35 @@ export default function SubscriptionPrompt({ open, onClose, strict = false }) {
                 onClick={startPayment}>
                 ترقية الاشتراك
               </button>
+
+              <button
+                className={`w-full py-3.5 px-4 rounded-xl border border-white/10 text-sm font-bold transition-all flex items-center justify-center gap-2 ${
+                  loadingVerify
+                    ? 'opacity-70 cursor-wait'
+                    : 'text-brand-secondary hover:bg-brand-secondary/5 border-brand-secondary/20'
+                }`}
+                onClick={handleVerifySync}
+                disabled={loadingVerify}>
+                {loadingVerify ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-brand-secondary/30 border-t-brand-secondary rounded-full animate-spin"></div>
+                    جاري التحقق...
+                  </>
+                ) : (
+                  'هل قمت بالدفع؟ تفعيل الاشتراك يدوياً'
+                )}
+              </button>
+
+              {verifyError && (
+                <div className="text-[11px] text-red-400 text-center bg-red-500/5 p-2 rounded-lg border border-red-500/10">
+                  {verifyError}
+                </div>
+              )}
+
               {strict && (
-                <button className="btn btn-secondary w-full" onClick={logout}>
+                <button
+                  className="btn btn-secondary w-full text-xs opacity-60 hover:opacity-100"
+                  onClick={logout}>
                   تسجيل الخروج
                 </button>
               )}

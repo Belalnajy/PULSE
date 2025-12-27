@@ -2,6 +2,8 @@ import React, { useMemo, useState } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import VerifyOtp from './pages/VerifyOtp';
 import Layout from './components/Layout';
 import CampaignBuilder from './components/CampaignBuilder';
@@ -330,20 +332,9 @@ function AppShell() {
                 block: 'start',
               })
             }
-            className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-brand-primary text-white p-3 rounded-full shadow-lg shadow-brand-primary/40 animate-bounce transition-all hover:bg-brand-primary/90"
+            className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-brand-primary text-white px-5 py-2.5 rounded-full shadow-lg shadow-brand-primary/40 animate-bounce transition-all hover:bg-brand-primary/90 text-xs font-bold"
             aria-label="Scroll to results">
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 14l-7 7m0 0l-7-7m7 7V3"
-              />
-            </svg>
+            شوف المحتوى
           </button>
         )}
     </>
@@ -359,6 +350,8 @@ export default function App() {
         <Route path="/welcome" element={<Welcome />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/verify-otp" element={<VerifyOtp />} />
 
         <Route

@@ -60,7 +60,7 @@ export default function Login() {
             <img
               src="/Pulse-logo.png"
               alt="Pulse"
-              className="w-16 h-16 rounded-full shadow-lg relative z-10 animate-pulse-soft border-2 border-[#38bdf8]/60"
+              className="w-16 h-16 rounded-full shadow-lg relative z-10 animate-pulse-soft border-2 border-brand-primary/60"
             />
 
             {/* Glow Effect */}
@@ -100,6 +100,13 @@ export default function Login() {
               required
               className="input-base"
             />
+            <div className="flex justify-end mt-1">
+              <a
+                href="/forgot-password"
+                className="text-xs text-brand-primary hover:text-brand-secondary transition-colors underline decoration-brand-primary/20 underline-offset-2">
+                نسيت كلمة المرور؟
+              </a>
+            </div>
           </div>
 
           <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-300 select-none">

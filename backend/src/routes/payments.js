@@ -210,6 +210,7 @@ router.get('/callback', async (req, res) => {
       .trim();
 
     if (!id) {
+      console.error('[Callback] Missing payment ID in request');
       return res.redirect(`${frontendUrl}/app?payment=missing_id`);
     }
 
@@ -220,6 +221,7 @@ router.get('/callback', async (req, res) => {
       .first();
 
     if (!session) {
+      console.error(`[Callback] No session found for ID: ${id}`);
       return res.redirect(`${frontendUrl}/app?payment=session_not_found`);
     }
 
@@ -422,5 +424,99 @@ router.post(
     }
   }
 );
+
+// Manual verification of the user's latest pending session
+router.get('/verify-my-last-session', auth, async (req, res) => {
+  try {
+    const { db } = require('../db');
+    // Only allow sessions created in the last 24 hours to prevent stale reactivation
+    const twentyFourHoursAgo = new Date(
+      Date.now() - 24 * 60 * 60 * 1000
+    ).toISOString();
+
+    const session = await db('payments_sessions')
+      .where({ user_id: req.user.id })
+      .whereIn('status', ['pending', 'initiated'])
+      .where('created_at', '>=', twentyFourHoursAgo)
+      .orderBy('id', 'desc')
+      .first();
+
+    if (!session) {
+      // Check if there's any session at all to provide better feedback
+      const lastAny = await db('payments_sessions')
+        .where({ user_id: req.user.id })
+        .orderBy('id', 'desc')
+        .first();
+
+      if (lastAny && lastAny.status === 'paid') {
+        return res.json({
+          success: true,
+          status: 'already_active',
+          message: 'اشتراكك مفعّل بالفعل!',
+        });
+      }
+
+      return res.status(404).json({
+        success: false,
+        status: 'no_pending',
+        message: 'لا توجد عمليات دفع معلقة مؤخراً ليتم التحقق منها.',
+      });
+    }
+
+    const invoice_id = session.session_id;
+    const axios = require('axios');
+    const secretKey = process.env.MOYASAR_SECRET_KEY;
+
+    if (!secretKey) {
+      return res.status(500).json({
+        success: false,
+        message: 'إعدادات بوابة الدفع غير مكتملة (Missing API Key)',
+      });
+    }
+
+    // Verify with Moyasar
+    const response = await axios.get(
+      `https://api.moyasar.com/v1/invoices/${invoice_id}`,
+      {
+        auth: {
+          username: secretKey,
+          password: '',
+        },
+      }
+    );
+
+    const invoice = response.data;
+
+    if (invoice.status === 'paid') {
+      await markSessionPaid(invoice_id);
+      return res.json({
+        success: true,
+        status: 'activated',
+        message: 'تم التحقق من الدفع وتفعيل الاشتراك بنجاح! 🎉',
+      });
+    } else if (invoice.status === 'failed') {
+      await markSessionFailed(invoice_id);
+      return res.json({
+        success: false,
+        status: 'failed',
+        message: 'فشلت عملية الدفع. يرجى المحاولة مرة أخرى.',
+        details: invoice.source?.message || '',
+      });
+    } else {
+      return res.json({
+        success: false,
+        status: invoice.status,
+        message: `حالة الدفع الحالية: ${invoice.status}`,
+      });
+    }
+  } catch (e) {
+    console.error('Verify last session error:', e.message);
+    res.status(500).json({
+      success: false,
+      message: 'وقع خطأ أثناء محاولة التحقق من الدفع.',
+      error: e.message,
+    });
+  }
+});
 
 module.exports = router;

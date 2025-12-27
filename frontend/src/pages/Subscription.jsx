@@ -37,6 +37,24 @@ export default function SubscriptionPage() {
     }
   }
 
+  async function handleVerifyPayment() {
+    setError('');
+    setLoading(true);
+    try {
+      const res = await api('/api/payments/verify-my-last-session');
+      if (res.success) {
+        alert(res.message);
+        await loadMe();
+      } else {
+        setError(res.message);
+      }
+    } catch (e) {
+      setError(e.message || 'تعذر التحقق من الدفع');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="content-card" style={{ padding: 16 }}>
       <h2 className="section-title">الاشتراك</h2>
@@ -70,17 +88,30 @@ export default function SubscriptionPage() {
       </div>
 
       {!isAdmin && (
-        <div className="row" style={{ gap: 12, marginTop: 16 }}>
-          <button
-            className="btn btn-primary"
-            onClick={mockActivate}
-            disabled={loading}>
-            {loading
-              ? 'جارٍ التحضير...'
-              : active
-              ? 'ترقية الاشتراك'
-              : 'بدء الاشتراك'}
-          </button>
+        <div className="flex flex-col gap-4 mt-6">
+          <div className="flex flex-wrap gap-3">
+            <button
+              className="btn btn-primary"
+              onClick={mockActivate}
+              disabled={loading}>
+              {loading
+                ? 'جارٍ التحضير...'
+                : active
+                ? 'ترقية الاشتراك'
+                : 'بدء الاشتراك'}
+            </button>
+
+            {!active && (
+              <button
+                className="btn border border-brand-primary/40 hover:bg-brand-primary/10 text-brand-primary font-bold px-6"
+                onClick={handleVerifyPayment}
+                disabled={loading}>
+                {loading
+                  ? 'جارٍ التحقق...'
+                  : 'تفعيل الاشتراك يدوياً (بعد الدفع)'}
+              </button>
+            )}
+          </div>
           {error && <div className="error">{error}</div>}
         </div>
       )}
