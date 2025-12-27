@@ -494,47 +494,9 @@ const CampaignBuilder = forwardRef(
         <div className="flex justify-between items-center mb-4 shrink-0">
           <h2 className="text-lg font-display font-bold text-white">
             {contentCategory === 'interactive'
-              ? 'المحتوى التفاعلي'
-              : 'المحتوى التسويقي'}
+              ? 'المحتوي التفاعلي'
+              : 'المحتوي التسويقي'}
           </h2>
-          {!hasResults ? (
-            <button
-              className="btn btn-primary btn-sm min-w-[100px]"
-              onClick={generate}
-              disabled={isGenerating || !isValid}>
-              {isGenerating ? 'جارٍ التوليد…' : 'إنشاء'}
-            </button>
-          ) : inputsChangedSinceLastGen ? (
-            <div className="flex gap-2">
-              <button
-                className="btn btn-primary btn-sm"
-                onClick={generate}
-                disabled={isGenerating || !isValid}>
-                {isGenerating ? 'جارٍ التوليد…' : 'إنشاء'}
-              </button>
-              <button
-                className="btn btn-secondary btn-sm"
-                onClick={resetAll}
-                disabled={isGenerating || isGeneratingVariation}>
-                محتوى جديد
-              </button>
-            </div>
-          ) : (
-            <div className="flex gap-2">
-              <button
-                className="btn btn-primary btn-sm"
-                onClick={generateVariation}
-                disabled={isGeneratingVariation || !isValid}>
-                {isGeneratingVariation ? 'جارٍ التوليد…' : 'إنشاء نسخة بديلة'}
-              </button>
-              <button
-                className="btn btn-secondary btn-sm"
-                onClick={resetAll}
-                disabled={isGenerating || isGeneratingVariation}>
-                محتوى جديد
-              </button>
-            </div>
-          )}
         </div>
 
         <div className="flex-1 overflow-y-auto scrollbar-thin pr-2 pl-1">
@@ -691,6 +653,47 @@ const CampaignBuilder = forwardRef(
               </div>
             )}
           </div>
+        </div>
+
+        <div className="pt-4 border-t border-white/5 shrink-0">
+          {!hasResults ? (
+            <button
+              className="btn btn-primary w-full py-3 text-base shadow-lg shadow-brand-primary/20"
+              onClick={generate}
+              disabled={isGenerating || !isValid}>
+              {isGenerating ? 'جارٍ التوليد…' : 'إنشاء'}
+            </button>
+          ) : inputsChangedSinceLastGen ? (
+            <div className="flex flex-col gap-2">
+              <button
+                className="btn btn-primary w-full py-3 text-base shadow-lg shadow-brand-primary/20"
+                onClick={generate}
+                disabled={isGenerating || !isValid}>
+                {isGenerating ? 'جارٍ التوليد…' : 'إنشاء'}
+              </button>
+              <button
+                className="btn btn-secondary w-full"
+                onClick={resetAll}
+                disabled={isGenerating || isGeneratingVariation}>
+                محتوى جديد
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              <button
+                className="btn btn-primary w-full py-3 text-base shadow-lg shadow-brand-primary/20"
+                onClick={generateVariation}
+                disabled={isGeneratingVariation || !isValid}>
+                {isGeneratingVariation ? 'جارٍ التوليد…' : 'إنشاء نسخة بديلة'}
+              </button>
+              <button
+                className="btn btn-secondary w-full"
+                onClick={resetAll}
+                disabled={isGenerating || isGeneratingVariation}>
+                محتوى جديد
+              </button>
+            </div>
+          )}
         </div>
 
         <SubscriptionPrompt
