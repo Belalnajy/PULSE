@@ -17,7 +17,9 @@ export async function api(path, { method = 'GET', body, headers = {} } = {}) {
   });
   const data = await res.json().catch(() => ({}));
   if (res.status === 401) {
-    window.location.href = '/login';
+    if (window.location.pathname !== '/login') {
+      window.location.href = '/login';
+    }
     const err = new Error(data?.error?.message || 'Unauthorized');
     err.status = 401;
     err.data = data;
