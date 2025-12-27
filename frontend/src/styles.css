@@ -157,11 +157,11 @@
   }
 
   .animate-slide-in-right {
-    animation: slideInRight 0.7s ease-out forwards;
+    animation: slideInFromRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 
-  .animate-slide-in-left {
-    animation: slideInLeft 0.3s ease-out forwards;
+  .animate-backdrop-in {
+    animation: backdropFadeIn 0.4s ease-out forwards;
   }
 
   .animate-scale-in {
@@ -260,6 +260,28 @@
   to {
     opacity: 1;
     transform: translateX(0);
+  }
+}
+
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes backdropFadeIn {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(4px);
   }
 }
 

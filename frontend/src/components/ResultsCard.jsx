@@ -130,8 +130,7 @@ function EmptyState() {
         جاهز للإبداع؟
       </h3>
       <p className="text-gray-400 max-w-sm mb-8 relative z-10 leading-relaxed">
-        املأ البيانات على اليمين ودع Pulse يحول أفكارك إلى محتوى احترافي في
-        ثوانٍ.
+        املأ البيانات المطلوبة ودع Pulse يحول أفكارك إلى محتوى احترافي في ثوانٍ.
       </p>
 
       {/* Quick Steps */}

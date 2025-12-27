@@ -221,8 +221,9 @@ function AppShell() {
   } else {
     // builder view
     right = (
-      <div className="main-layout grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-4 mt-2 flex-t ">
-        <div className="flex flex-col gap-4">
+      <div className="main-layout grid grid-cols-1 lg:grid-cols-2 gap-4 mt-2 flex-t">
+        {/* Row 1, Col 1 on Desktop | Order 1 on Mobile */}
+        <div className="order-1 lg:col-start-1 lg:row-start-1 flex flex-col">
           <CampaignBuilder
             ref={campaignBuilderRef}
             onGenerated={setOutputs}
@@ -231,24 +232,32 @@ function AppShell() {
             onResetOutputs={() => setOutputs({})}
             outputs={outputs}
           />
-          {outputs?.hashtags && (
-            <div className="card-glass p-5">
-              <HashtagsDisplay hashtags={outputs.hashtags} />
-            </div>
-          )}
-          {outputs?.platform_tips && (
-            <div className="card-glass p-5">
-              <PlatformTips platform_tips={outputs.platform_tips} />
-            </div>
-          )}
         </div>
-        <ResultsCard
-          outputs={outputs}
-          ref={resultsRef}
-          onRegenerate={handleRegenerate}
-          onRefine={handleRefine}
-          regeneratingPlatform={regeneratingPlatform}
-        />
+
+        {/* Column 2 on Desktop | Order 2 on Mobile */}
+        <div className="order-2 lg:col-start-2 lg:row-start-1 lg:row-span-3 min-h-0">
+          <ResultsCard
+            outputs={outputs}
+            ref={resultsRef}
+            onRegenerate={handleRegenerate}
+            onRefine={handleRefine}
+            regeneratingPlatform={regeneratingPlatform}
+          />
+        </div>
+
+        {/* Below Form on Desktop | Order 3 on Mobile */}
+        {outputs?.hashtags && (
+          <div className="order-3 lg:col-start-1 lg:row-start-2 card-glass p-5">
+            <HashtagsDisplay hashtags={outputs.hashtags} />
+          </div>
+        )}
+
+        {/* Below Hashtags on Desktop | Order 4 on Mobile */}
+        {outputs?.platform_tips && (
+          <div className="order-4 lg:col-start-1 lg:row-start-3 card-glass p-5">
+            <PlatformTips platform_tips={outputs.platform_tips} />
+          </div>
+        )}
       </div>
     );
   }
