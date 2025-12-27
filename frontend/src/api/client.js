@@ -25,7 +25,7 @@ export async function api(path, { method = 'GET', body, headers = {} } = {}) {
   }
   // Legacy 402 license handling removed under subscription model
   if (!res.ok || data?.success === false) {
-    const msg = data?.error?.message || `HTTP ${res.status}`;
+    const msg = data?.error?.message || data?.message || `HTTP ${res.status}`;
     const err = new Error(msg);
     err.status = res.status;
     err.data = data;

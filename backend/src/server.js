@@ -65,6 +65,7 @@ app.use('/profile', profileRoutes);
 app.use('/admin', adminRoutes);
 app.use('/support', supportRoutes);
 app.use('/payments', paymentsRoutes);
+app.use('/api/payments', paymentsRoutes);
 app.use('/plans', require('./routes/plans'));
 app.use('/testimonials', require('./routes/testimonials'));
 

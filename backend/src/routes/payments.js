@@ -442,24 +442,14 @@ router.get('/verify-my-last-session', auth, async (req, res) => {
       .first();
 
     if (!session) {
-      // Check if there's any session at all to provide better feedback
-      const lastAny = await db('payments_sessions')
-        .where({ user_id: req.user.id })
-        .orderBy('id', 'desc')
-        .first();
-
-      if (lastAny && lastAny.status === 'paid') {
-        return res.json({
-          success: true,
-          status: 'already_active',
-          message: 'اشتراكك مفعّل بالفعل!',
-        });
-      }
-
       return res.status(404).json({
         success: false,
         status: 'no_pending',
         message: 'لا توجد عمليات دفع معلقة مؤخراً ليتم التحقق منها.',
+        error: {
+          code: 404,
+          message: 'لا توجد عمليات دفع معلقة مؤخراً ليتم التحقق منها.',
+        },
       });
     }
 
@@ -502,11 +492,28 @@ router.get('/verify-my-last-session', auth, async (req, res) => {
         message: 'فشلت عملية الدفع. يرجى المحاولة مرة أخرى.',
         details: invoice.source?.message || '',
       });
+    } else if (invoice.status === 'initiated' || invoice.status === 'pending') {
+      return res.json({
+        success: false,
+        status: invoice.status,
+        message:
+          invoice.status === 'initiated'
+            ? 'عملية الدفع بدأت، لكنك لم تدخل بيانات البطاقة بعد. يُرجى إتمام الدفع في صفحة ميسر.'
+            : 'عملية الدفع قيد الانتظار، بانتظار إتمام العملية من جانبك.',
+        error: {
+          code: 400,
+          message:
+            invoice.status === 'initiated'
+              ? 'يُرجى إتمام الدفع في صفحة ميسر.'
+              : 'عملية الدفع قيد الانتظار.',
+        },
+      });
     } else {
       return res.json({
         success: false,
         status: invoice.status,
-        message: `حالة الدفع الحالية: ${invoice.status}`,
+        message: `حالة الدفع: ${invoice.status}. يرجى المحاولة مرة أخرى أو التواصل مع الدعم.`,
+        error: { code: 400, message: `حالة الدفع: ${invoice.status}` },
       });
     }
   } catch (e) {
