@@ -164,6 +164,18 @@ function AppShell() {
     }
   };
 
+  const handleRefine = async (platform, comment) => {
+    if (!platform || !comment || !campaignBuilderRef.current) return;
+    setRegeneratingPlatform(platform);
+    try {
+      await campaignBuilderRef.current.refinePlatform(platform, comment);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setRegeneratingPlatform(null);
+    }
+  };
+
   if (view === 'dashboard') {
     right = (
       <div className="main-layout" style={{ display: 'block' }}>
@@ -234,6 +246,7 @@ function AppShell() {
           outputs={outputs}
           ref={resultsRef}
           onRegenerate={handleRegenerate}
+          onRefine={handleRefine}
           regeneratingPlatform={regeneratingPlatform}
         />
       </div>

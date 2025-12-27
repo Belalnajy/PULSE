@@ -396,6 +396,91 @@ const CampaignBuilder = forwardRef(
           throw err;
         }
       },
+      refinePlatform: async (platform, userComment) => {
+        if (!platform || !userComment) return;
+
+        const v = {
+          idea: !!idea.trim(),
+          contentGoal: !!contentGoal,
+        };
+        if (!v.idea || !v.contentGoal) {
+          setError('البيانات غير مكتملة للتعديل.');
+          return;
+        }
+
+        if (entitlements?.requires_renewal_block && !isAdmin) {
+          setLimitOpen(true);
+          return;
+        }
+        const remaining = Number(
+          entitlements?.daily_usage?.content_remaining_today || 0
+        );
+        const canTrial = !!entitlements?.can_use_trial_today;
+        if (!isActive && !isAdmin && canTrial && remaining <= 0) {
+          setLimitOpen(true);
+          return;
+        }
+
+        const clientRequestId = `${Date.now()}-${Math.random()
+          .toString(36)
+          .slice(2, 8)}`;
+        const payload = {
+          idea,
+          contentGoal,
+          contentCategory,
+          tone,
+          platforms: [platform],
+          ageGroups,
+          userComment,
+          targetPlatform: platform,
+          variationMode: true,
+          variationIteration: variationIteration + 1,
+          clientRequestId,
+        };
+
+        setVariationIteration((prev) => prev + 1);
+
+        try {
+          const res = await fetch(`${API}/api/campaigns/generate`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(localStorage.getItem('auth_token')
+                ? {
+                    Authorization: `Bearer ${localStorage.getItem(
+                      'auth_token'
+                    )}`,
+                  }
+                : {}),
+            },
+            body: JSON.stringify(payload),
+          });
+
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok || data?.success === false) {
+            throw new Error(data?.error?.message || 'Failed');
+          }
+
+          const out = data?.data?.outputs || {};
+          const newPlatformContent = out[platform];
+          if (newPlatformContent) {
+            const merged = {
+              ...outputsRef.current,
+              [platform]: newPlatformContent,
+            };
+            outputsRef.current = merged;
+            onGenerated?.(merged);
+
+            loadEntitlements?.();
+            refreshTrialData?.();
+          }
+        } catch (err) {
+          console.error('Refinement failed', err);
+          setError('فشل تعديل المحتوى، حاول مرة أخرى.');
+          setTimeout(() => setError(''), 3000);
+          throw err;
+        }
+      },
     }));
 
     const isValid = useMemo(() => {

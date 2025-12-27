@@ -26,6 +26,8 @@ const schema = Joi.object({
   variationMode: Joi.boolean().optional(),
   variationIteration: Joi.number().integer().min(0).optional(),
   clientRequestId: Joi.string().optional(),
+  userComment: Joi.string().optional(),
+  targetPlatform: Joi.string().optional(),
 });
 
 router.post(
@@ -77,34 +79,26 @@ router.post(
       res.json({ success: true, data: { generated: true, outputs } });
     } catch (e) {
       if (e.code === 'SUBSCRIPTION_REQUIRED')
-        return res
-          .status(403)
-          .json({
-            success: false,
-            error: { code: 'SUBSCRIPTION_REQUIRED', message: e.message },
-          });
+        return res.status(403).json({
+          success: false,
+          error: { code: 'SUBSCRIPTION_REQUIRED', message: e.message },
+        });
       if (e.code === 'TRIAL_LIMIT_REACHED')
-        return res
-          .status(403)
-          .json({
-            success: false,
-            error: { code: 'TRIAL_LIMIT_REACHED', message: e.message },
-          });
+        return res.status(403).json({
+          success: false,
+          error: { code: 'TRIAL_LIMIT_REACHED', message: e.message },
+        });
       if (e.code === 'OTP_REQUIRED')
-        return res
-          .status(403)
-          .json({
-            success: false,
-            error: { code: 'OTP_REQUIRED', message: e.message },
-          });
+        return res.status(403).json({
+          success: false,
+          error: { code: 'OTP_REQUIRED', message: e.message },
+        });
       if (e.code === 'FAIR_USAGE_THROTTLED')
-        return res
-          .status(429)
-          .json({
-            success: false,
-            code: 'FAIR_USAGE_THROTTLED',
-            message: e.message,
-          });
+        return res.status(429).json({
+          success: false,
+          code: 'FAIR_USAGE_THROTTLED',
+          message: e.message,
+        });
       const status = e.status || e.code || 500;
       const message = e.message || 'فشل توليد الحملة';
       res

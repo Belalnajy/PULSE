@@ -175,7 +175,7 @@ function EmptyState() {
 }
 
 const ResultsCard = React.forwardRef(
-  ({ outputs, onRegenerate, regeneratingPlatform }, ref) => {
+  ({ outputs, onRegenerate, onRefine, regeneratingPlatform }, ref) => {
     // Extract hashtags and platform_tips
     const hashtags = outputs?.hashtags;
     const platform_tips = outputs?.platform_tips;
@@ -192,6 +192,12 @@ const ResultsCard = React.forwardRef(
     const empty = entries.length === 0;
     const dev = (import.meta.env.MODE || '').toLowerCase() === 'development';
     const traceId = outputs?.suggestions?.__meta?.traceId || '';
+
+    const [comments, setComments] = React.useState({});
+
+    function handleCommentChange(platform, val) {
+      setComments((prev) => ({ ...prev, [platform]: val }));
+    }
 
     function copyAll() {
       if (empty) return;
@@ -271,7 +277,7 @@ const ResultsCard = React.forwardRef(
                         </div>
                         <div className="text-center w-full max-w-[120px]">
                           <div className="text-sm font-display font-bold text-gradient animate-pulse mb-1">
-                            جارٍ التجديد...
+                            جارٍ التحديث...
                           </div>
 
                           {/* Mini Progress Bar */}
@@ -285,12 +291,64 @@ const ResultsCard = React.forwardRef(
                           </div>
 
                           <div className="text-[10px] text-gray-500">
-                            نبتكر لك نسخة جديدة
+                            نطوّر المحتوى بناءً على رأيك
                           </div>
                         </div>
                       </div>
                     )}
                     {renderContent(content)}
+                  </div>
+
+                  {/* Refinement Area */}
+                  <div className="mt-2 mb-4 bg-white/5 rounded-xl border border-white/5 p-3 group-hover:border-brand-primary/20 transition-all duration-300">
+                    <div className="flex items-center gap-2 mb-2 text-[10px] text-gray-400 font-medium uppercase tracking-wider">
+                      <Sparkles className="w-3 h-3 text-brand-secondary" />
+                      هل تريد تعديل شيئاً؟ ضِف كومنتك هنا
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="مثلاً: خليه أكثر حماساً، أو ركز على السعر..."
+                        className="flex-1 bg-black/40 border border-white/5 rounded-lg px-3 py-2 text-xs text-white placeholder:text-gray-600 focus:outline-hidden focus:border-brand-primary/50 transition-all"
+                        value={comments[platform] || ''}
+                        onChange={(e) =>
+                          handleCommentChange(platform, e.target.value)
+                        }
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && comments[platform]?.trim()) {
+                            onRefine?.(platform, comments[platform]);
+                            setComments((prev) => ({
+                              ...prev,
+                              [platform]: '',
+                            }));
+                          }
+                        }}
+                      />
+                      <button
+                        className="btn btn-primary btn-sm px-4 min-w-[80px] text-[10px]"
+                        onClick={() => {
+                          if (comments[platform]?.trim()) {
+                            onRefine?.(platform, comments[platform]);
+                            setComments((prev) => ({
+                              ...prev,
+                              [platform]: '',
+                            }));
+                          }
+                        }}
+                        disabled={
+                          !comments[platform]?.trim() || !!regeneratingPlatform
+                        }>
+                        تعديل
+                      </button>
+                    </div>
+                    {/* UI Hint */}
+                    <div className="mt-2 text-[9px] text-gray-500 flex items-center gap-1.5 px-1">
+                      <Lightbulb className="w-3 h-3 text-yellow-500/50" />
+                      <span>
+                        تلميح: جرب "خليه أقصر"، "ركز على المميزات"، أو "غيّر
+                        الأسلوب لمرح"
+                      </span>
+                    </div>
                   </div>
 
                   <div className="flex items-center gap-3 mt-2">
@@ -311,7 +369,7 @@ const ResultsCard = React.forwardRef(
                         ) : (
                           <RefreshCw className="w-3 h-3" />
                         )}
-                        إعادة توليد
+                        توليد نسخة بديلة
                       </button>
                     )}
                   </div>
@@ -327,7 +385,7 @@ const ResultsCard = React.forwardRef(
                 </div>
               ))}
 
-              <div className="mt-4  bottom-0 bg-brand-dark/80 backdrop-blur-md p-4 border-t border-white/10 -mx-5 rounded-t-xl z-10 flex justify-center">
+              <div className="mt-4 bottom-0 bg-brand-dark/80 backdrop-blur-md p-4 border-t border-white/10 -mx-5 rounded-t-xl z-10 flex justify-center">
                 <button
                   className="btn btn-primary w-full shadow-lg"
                   onClick={copyAll}>

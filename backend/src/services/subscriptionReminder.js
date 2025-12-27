@@ -1,4 +1,4 @@
-const db = require('../db');
+const { db } = require('../db');
 const { sendExpiryReminderEmail } = require('./email');
 
 // Check for subscriptions expiring within the specified days
@@ -7,25 +7,24 @@ async function checkExpiringSubscriptions() {
 
   try {
     // Find active subscriptions expiring in 1, 3, or 7 days
-    const result = await db.query(`
+    const result = await db.raw(`
       SELECT 
         s.id AS subscription_id,
         s.user_id,
         s.end_at,
         s.last_reminder_sent,
         u.email,
-        u.name,
         u.display_name
       FROM subscriptions s
       JOIN users u ON s.user_id = u.id
       WHERE s.status = 'active'
         AND s.end_at IS NOT NULL
-        AND s.end_at > NOW()
-        AND s.end_at <= NOW() + INTERVAL '7 days'
+        AND s.end_at > datetime('now')
+        AND s.end_at <= datetime('now', '+7 days')
       ORDER BY s.end_at ASC
     `);
 
-    const subscriptions = result.rows;
+    const subscriptions = result;
     console.log(
       `[SubscriptionReminder] Found ${subscriptions.length} subscriptions expiring within 7 days`
     );
@@ -43,7 +42,7 @@ async function checkExpiringSubscriptions() {
       );
 
       if (shouldSendReminder) {
-        const userName = sub.display_name || sub.name || '';
+        const userName = sub.display_name || sub.email || '';
 
         console.log(
           `[SubscriptionReminder] Sending reminder to ${sub.email} - ${daysLeft} day(s) left`
@@ -58,8 +57,8 @@ async function checkExpiringSubscriptions() {
 
         if (emailResult.success) {
           // Update the last reminder sent timestamp
-          await db.query(
-            `UPDATE subscriptions SET last_reminder_sent = NOW() WHERE id = $1`,
+          await db.raw(
+            `UPDATE subscriptions SET last_reminder_sent = datetime('now') WHERE id = ?`,
             [sub.subscription_id]
           );
           console.log(
