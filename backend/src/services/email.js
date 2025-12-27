@@ -13,7 +13,7 @@ const transporter = nodemailer.createTransport({
 async function sendOtpEmail(email, otp) {
   try {
     const info = await transporter.sendMail({
-      from: `"Alva Support" <${process.env.EMAIL_USER}>`,
+      from: `"Pulse Support" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: 'Verify your Pulse account',
       html: `
@@ -129,7 +129,7 @@ async function sendResetPasswordEmail(email, otp) {
     const info = await transporter.sendMail({
       from: `"Pulse Support" <${process.env.EMAIL_USER}>`,
       to: email,
-      subject: 'تغيير كلمة المرور - Pulse',
+      subject: 'Reset Password - استعادة كلمة المرور',
       html: `
         <div dir="rtl" style="font-family: 'Segoe UI', Tahoma, sans-serif; max-width: 600px; margin: auto; padding: 30px; background: #0c131d; border-radius: 16px; color: #fff;">
           <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 30px;">

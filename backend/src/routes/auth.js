@@ -59,7 +59,15 @@ router.post(
       otp_expires_at: expires,
     });
 
-    await sendOtpEmail(email, otp);
+    const emailResult = await sendOtpEmail(email, otp);
+    if (!emailResult.success) {
+      console.error(
+        '[Auth] Failed to send registration email:',
+        emailResult.error
+      );
+      // We still return success for registration but maybe with a flag or just log it.
+      // Actually, for consistency let's inform the user.
+    }
 
     res.json({
       success: true,
@@ -278,7 +286,18 @@ router.post(
       .where({ id: user.id })
       .update({ otp_code: otp_hash, otp_expires_at: expires });
 
-    await sendOtpEmail(user.email, otp);
+    const emailResult = await sendOtpEmail(user.email, otp);
+
+    if (!emailResult.success) {
+      console.error('[Auth] Failed to send OTP email:', emailResult.error);
+      return res.status(500).json({
+        success: false,
+        error: {
+          code: 'EMAIL_ERROR',
+          message: 'تعذر إرسال رمز التحقق. يرجى المحاولة لاحقاً.',
+        },
+      });
+    }
 
     res.json({ success: true, data: { sent: true } });
   }
