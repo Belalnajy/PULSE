@@ -48,7 +48,7 @@ export default function SubscriptionPrompt({ open, onClose, strict = false }) {
         body: { plan_id: 'monthly', return_url: returnUrl },
       });
       if (res?.data?.checkout_url) {
-        window.location.href = res.data.checkout_url;
+        window.open(res.data.checkout_url, '_blank');
       } else {
         setMsg('لم يتم العثور على رابط الدفع');
       }
