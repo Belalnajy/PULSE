@@ -16,4 +16,18 @@ async function auth(req, res, next) {
   }
 }
 
-module.exports = { auth };
+async function optionalAuth(req, res, next) {
+  try {
+    const header = req.headers.authorization || '';
+    const token = header.startsWith('Bearer ') ? header.slice(7) : null;
+    if (!token) return next();
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await db('users').where({ id: payload.userId }).first();
+    if (user) req.user = user;
+    next();
+  } catch (e) {
+    next();
+  }
+}
+
+module.exports = { auth, optionalAuth };

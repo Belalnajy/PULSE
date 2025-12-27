@@ -6,7 +6,7 @@ const { auth } = require('../middleware/auth');
 const { logger } = require('../utils/logger');
 const {
   activateSubscription,
-  expireSubscription,
+  expireSubscription
 } = require('../services/payment');
 const { sendExpiryReminderEmail } = require('../services/email');
 
@@ -18,14 +18,14 @@ function adminOnly(req, res, next) {
     if (!req.user || req.user.email !== adminEmail) {
       return res.status(403).json({
         success: false,
-        error: { code: 'NOT_ADMIN', message: 'Admin access only' },
+        error: { code: 'NOT_ADMIN', message: 'Admin access only' }
       });
     }
     next();
   } catch (e) {
     return res.status(403).json({
       success: false,
-      error: { code: 'NOT_ADMIN', message: 'Admin access only' },
+      error: { code: 'NOT_ADMIN', message: 'Admin access only' }
     });
   }
 }
@@ -79,7 +79,7 @@ router.get('/users', async (req, res) => {
         remainingDays: Number.isFinite(remainingDays) ? remainingDays : null,
         hasOpenSupport: !!openSupport,
         lastSupportAt: openSupport ? openSupport.created_at : null,
-        createdAt: u.created_at,
+        createdAt: u.created_at
       });
     }
     res.json({ success: true, data: { users: result } });
@@ -89,14 +89,14 @@ router.get('/users', async (req, res) => {
       success: false,
       error: {
         code: 'ADMIN_ERROR',
-        message: 'Unable to complete admin action.',
-      },
+        message: 'Unable to complete admin action.'
+      }
     });
   }
 });
 
 const idSchema = Joi.object({
-  userId: Joi.number().integer().min(1).required(),
+  userId: Joi.number().integer().min(1).required()
 });
 
 router.post('/subscriptions/activate', async (req, res) => {
@@ -110,7 +110,7 @@ router.post('/subscriptions/activate', async (req, res) => {
     if (!user)
       return res.status(404).json({
         success: false,
-        error: { code: 404, message: 'User not found' },
+        error: { code: 404, message: 'User not found' }
       });
     const sub = await activateSubscription(
       user.id,
@@ -126,8 +126,8 @@ router.post('/subscriptions/activate', async (req, res) => {
       success: false,
       error: {
         code: 'ADMIN_ERROR',
-        message: 'Unable to complete admin action.',
-      },
+        message: 'Unable to complete admin action.'
+      }
     });
   }
 });
@@ -143,7 +143,7 @@ router.post('/subscriptions/deactivate', async (req, res) => {
     if (!user)
       return res.status(404).json({
         success: false,
-        error: { code: 404, message: 'User not found' },
+        error: { code: 404, message: 'User not found' }
       });
     const updated = await expireSubscription(user.id);
     logger.info({ userId: user.id }, 'Admin subscription deactivated');
@@ -154,8 +154,8 @@ router.post('/subscriptions/deactivate', async (req, res) => {
       success: false,
       error: {
         code: 'ADMIN_ERROR',
-        message: 'Unable to complete admin action.',
-      },
+        message: 'Unable to complete admin action.'
+      }
     });
   }
 });
@@ -171,7 +171,7 @@ router.post('/users/reset-password', async (req, res) => {
     if (!user)
       return res.status(404).json({
         success: false,
-        error: { code: 404, message: 'User not found' },
+        error: { code: 404, message: 'User not found' }
       });
 
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
@@ -191,8 +191,8 @@ router.post('/users/reset-password', async (req, res) => {
       success: false,
       error: {
         code: 'ADMIN_ERROR',
-        message: 'Unable to complete admin action.',
-      },
+        message: 'Unable to complete admin action.'
+      }
     });
   }
 });
@@ -208,14 +208,14 @@ router.post('/users/delete', async (req, res) => {
     if (!user)
       return res.status(404).json({
         success: false,
-        error: { code: 404, message: 'User not found' },
+        error: { code: 404, message: 'User not found' }
       });
 
     const adminEmail = process.env.ADMIN_EMAIL || 'Alva@admin.com';
     if (user.email === adminEmail || user.is_admin) {
       return res.status(403).json({
         success: false,
-        error: { code: 403, message: 'Cannot delete admin account' },
+        error: { code: 403, message: 'Cannot delete admin account' }
       });
     }
 
@@ -228,8 +228,8 @@ router.post('/users/delete', async (req, res) => {
       success: false,
       error: {
         code: 'ADMIN_ERROR',
-        message: 'Unable to complete admin action.',
-      },
+        message: 'Unable to complete admin action.'
+      }
     });
   }
 });
@@ -240,14 +240,14 @@ router.get('/support/:userId', async (req, res) => {
     if (!Number.isInteger(userId) || userId < 1) {
       return res.status(400).json({
         success: false,
-        error: { code: 400, message: 'Invalid userId' },
+        error: { code: 400, message: 'Invalid userId' }
       });
     }
     const user = await db('users').where({ id: userId }).first();
     if (!user)
       return res.status(404).json({
         success: false,
-        error: { code: 'USER_NOT_FOUND', message: 'المستخدم غير موجود.' },
+        error: { code: 'USER_NOT_FOUND', message: 'المستخدم غير موجود.' }
       });
     const rows = await db('support_requests')
       .where(function () {
@@ -272,8 +272,8 @@ router.get('/support/:userId', async (req, res) => {
       success: false,
       error: {
         code: 'SUPPORT_ERROR',
-        message: 'Unable to load support requests.',
-      },
+        message: 'Unable to load support requests.'
+      }
     });
   }
 });
@@ -284,14 +284,14 @@ router.patch('/support/:id/close', async (req, res) => {
     if (!Number.isInteger(id) || id < 1) {
       return res.status(400).json({
         success: false,
-        error: { code: 400, message: 'Invalid request id' },
+        error: { code: 400, message: 'Invalid request id' }
       });
     }
     const existing = await db('support_requests').where({ id }).first();
     if (!existing) {
       return res.status(404).json({
         success: false,
-        error: { code: 404, message: 'Support request not found' },
+        error: { code: 404, message: 'Support request not found' }
       });
     }
     await db('support_requests').where({ id }).update({ resolved: 1 });
@@ -302,8 +302,8 @@ router.patch('/support/:id/close', async (req, res) => {
       success: false,
       error: {
         code: 'ADMIN_ERROR',
-        message: 'Unable to complete admin action.',
-      },
+        message: 'Unable to complete admin action.'
+      }
     });
   }
 });
@@ -331,8 +331,48 @@ router.get('/support-closed', async (req, res) => {
       success: false,
       error: {
         code: 'ADMIN_ERROR',
-        message: 'Unable to complete admin action.',
-      },
+        message: 'Unable to complete admin action.'
+      }
+    });
+  }
+});
+
+// Get guest/unassigned support requests (user_id is null and email doesn't match any user)
+router.get('/support-guest', async (req, res) => {
+  try {
+    // Get all user emails for comparison
+    const userEmails = await db('users').pluck('email');
+    const emailSet = new Set(userEmails.map((e) => e?.toLowerCase()));
+
+    // Get all unresolved support requests without a user_id
+    const rows = await db('support_requests')
+      .whereNull('user_id')
+      .andWhere('resolved', 0)
+      .orderBy('created_at', 'desc')
+      .select(
+        'id',
+        'email',
+        'phone',
+        'message',
+        'is_new_user',
+        'resolved',
+        'created_at'
+      );
+
+    // Filter out requests where email matches a registered user
+    const guestRequests = rows.filter(
+      (r) => !r.email || !emailSet.has(r.email.toLowerCase())
+    );
+
+    return res.json({ success: true, data: { requests: guestRequests } });
+  } catch (e) {
+    logger.error({ err: e.message }, 'Admin support-guest failed');
+    return res.status(500).json({
+      success: false,
+      error: {
+        code: 'ADMIN_ERROR',
+        message: 'Unable to load guest support requests.'
+      }
     });
   }
 });
@@ -343,7 +383,7 @@ const notifySchema = Joi.object({
   type: Joi.string()
     .valid('expiry_reminder', 'welcome', 'custom')
     .default('expiry_reminder'),
-  customMessage: Joi.string().max(1000).optional(),
+  customMessage: Joi.string().max(1000).optional()
 });
 
 router.post('/users/send-notification', async (req, res) => {
@@ -359,7 +399,7 @@ router.post('/users/send-notification', async (req, res) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        error: { code: 404, message: 'User not found' },
+        error: { code: 404, message: 'User not found' }
       });
     }
 
@@ -389,8 +429,8 @@ router.post('/users/send-notification', async (req, res) => {
           success: false,
           error: {
             code: 'NO_SUBSCRIPTION',
-            message: 'المستخدم ليس لديه اشتراك نشط',
-          },
+            message: 'المستخدم ليس لديه اشتراك نشط'
+          }
         });
       }
 
@@ -417,16 +457,16 @@ router.post('/users/send-notification', async (req, res) => {
             sent: true,
             email: user.email,
             type: 'expiry_reminder',
-            daysLeft,
-          },
+            daysLeft
+          }
         });
       } else {
         return res.status(500).json({
           success: false,
           error: {
             code: 'EMAIL_FAILED',
-            message: 'فشل في إرسال البريد الإلكتروني',
-          },
+            message: 'فشل في إرسال البريد الإلكتروني'
+          }
         });
       }
     }
@@ -434,7 +474,7 @@ router.post('/users/send-notification', async (req, res) => {
     // For other types, return success (can be expanded later)
     return res.json({
       success: true,
-      data: { sent: true, email: user.email, type: value.type },
+      data: { sent: true, email: user.email, type: value.type }
     });
   } catch (e) {
     logger.error({ err: e.message }, 'Admin send-notification failed');
@@ -442,8 +482,8 @@ router.post('/users/send-notification', async (req, res) => {
       success: false,
       error: {
         code: 'ADMIN_ERROR',
-        message: 'Unable to complete admin action.',
-      },
+        message: 'Unable to complete admin action.'
+      }
     });
   }
 });

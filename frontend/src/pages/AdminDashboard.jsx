@@ -21,7 +21,7 @@ function computeRemainingDays(expiresAt) {
 
 export default function AdminDashboard({ onCancel, defaultTab = 'users' }) {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState(defaultTab); // users, testimonials, pricing
+  const [activeTab, setActiveTab] = useState(defaultTab); // users, testimonials, pricing, guest-support
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -29,6 +29,11 @@ export default function AdminDashboard({ onCancel, defaultTab = 'users' }) {
   const [rowMsg, setRowMsg] = useState({});
   const [openUserSupport, setOpenUserSupport] = useState(null);
   const [supportByUser, setSupportByUser] = useState({});
+
+  // Guest support states
+  const [guestSupport, setGuestSupport] = useState([]);
+  const [guestSupportLoading, setGuestSupportLoading] = useState(false);
+  const [guestSupportClosing, setGuestSupportClosing] = useState({});
 
   // Pricing states
   const [plans, setPlans] = useState([]);
@@ -80,7 +85,7 @@ export default function AdminDashboard({ onCancel, defaultTab = 'users' }) {
       setPlansSaving(planId);
       await api(`/api/plans/${planId}`, {
         method: 'PUT',
-        body: updates,
+        body: updates
       });
       setPlansMessage({ type: 'success', text: 'تم التحديث بنجاح' });
       await loadPlans();
@@ -107,7 +112,7 @@ export default function AdminDashboard({ onCancel, defaultTab = 'users' }) {
     updatePlan(plan.plan_id, {
       price_cents: plan.price_cents,
       name: plan.name,
-      description: plan.description,
+      description: plan.description
     });
   }
 
@@ -118,6 +123,8 @@ export default function AdminDashboard({ onCancel, defaultTab = 'users' }) {
       return;
     }
     loadUsers();
+    // Also preload guest support count for badge
+    loadGuestSupport();
   }, [user, isAdmin]);
 
   // Load plans when pricing tab is active
@@ -126,6 +133,37 @@ export default function AdminDashboard({ onCancel, defaultTab = 'users' }) {
       loadPlans();
     }
   }, [activeTab]);
+
+  // Load guest support when that tab is active
+  useEffect(() => {
+    if (activeTab === 'guest-support') {
+      loadGuestSupport();
+    }
+  }, [activeTab]);
+
+  async function loadGuestSupport() {
+    setGuestSupportLoading(true);
+    try {
+      const res = await api('/api/admin/support-guest');
+      setGuestSupport(res.data?.requests || []);
+    } catch (e) {
+      console.error('Failed to load guest support', e);
+    } finally {
+      setGuestSupportLoading(false);
+    }
+  }
+
+  async function closeGuestSupportRequest(requestId) {
+    setGuestSupportClosing((prev) => ({ ...prev, [requestId]: true }));
+    try {
+      await api(`/api/admin/support/${requestId}/close`, { method: 'PATCH' });
+      setGuestSupport((prev) => prev.filter((r) => r.id !== requestId));
+    } catch (e) {
+      console.error('Failed to close guest support request', e);
+    } finally {
+      setGuestSupportClosing((prev) => ({ ...prev, [requestId]: false }));
+    }
+  }
 
   function setRowBusy(userId, busy) {
     setRowLoading((prev) => ({ ...prev, [userId]: !!busy }));
@@ -136,7 +174,7 @@ export default function AdminDashboard({ onCancel, defaultTab = 'users' }) {
     try {
       const res = await api('/api/admin/subscriptions/activate', {
         method: 'POST',
-        body: { userId },
+        body: { userId }
       });
       const sub = res?.data?.subscription || null;
       setUsers((prev) =>
@@ -150,7 +188,7 @@ export default function AdminDashboard({ onCancel, defaultTab = 'users' }) {
     } catch (e) {
       setRowMsg((prev) => ({
         ...prev,
-        [userId]: 'تعذر تنفيذ العملية، حاول مرة أخرى.',
+        [userId]: 'تعذر تنفيذ العملية، حاول مرة أخرى.'
       }));
     } finally {
       setRowBusy(userId, false);
@@ -162,7 +200,7 @@ export default function AdminDashboard({ onCancel, defaultTab = 'users' }) {
     try {
       const res = await api('/api/admin/subscriptions/deactivate', {
         method: 'POST',
-        body: { userId },
+        body: { userId }
       });
       const sub = res?.data?.subscription || null;
       setUsers((prev) =>
@@ -176,7 +214,7 @@ export default function AdminDashboard({ onCancel, defaultTab = 'users' }) {
     } catch (e) {
       setRowMsg((prev) => ({
         ...prev,
-        [userId]: 'تعذر تنفيذ العملية، حاول مرة أخرى.',
+        [userId]: 'تعذر تنفيذ العملية، حاول مرة أخرى.'
       }));
     } finally {
       setRowBusy(userId, false);
@@ -188,7 +226,7 @@ export default function AdminDashboard({ onCancel, defaultTab = 'users' }) {
     try {
       const res = await api('/api/admin/users/reset-password', {
         method: 'POST',
-        body: { userId },
+        body: { userId }
       });
       const pwd = res?.newPassword || res?.data?.newPassword;
       if (pwd) {
@@ -200,13 +238,13 @@ export default function AdminDashboard({ onCancel, defaultTab = 'users' }) {
       } else {
         setRowMsg((prev) => ({
           ...prev,
-          [userId]: 'تعذر تنفيذ العملية، حاول مرة أخرى.',
+          [userId]: 'تعذر تنفيذ العملية، حاول مرة أخرى.'
         }));
       }
     } catch (e) {
       setRowMsg((prev) => ({
         ...prev,
-        [userId]: 'تعذر تنفيذ العملية، حاول مرة أخرى.',
+        [userId]: 'تعذر تنفيذ العملية، حاول مرة أخرى.'
       }));
     } finally {
       setRowBusy(userId, false);
@@ -218,7 +256,7 @@ export default function AdminDashboard({ onCancel, defaultTab = 'users' }) {
     try {
       const res = await api('/api/admin/users/delete', {
         method: 'POST',
-        body: { userId },
+        body: { userId }
       });
       const ok = !!(res?.data?.deleted || res?.deleted);
       if (ok) {
@@ -226,7 +264,7 @@ export default function AdminDashboard({ onCancel, defaultTab = 'users' }) {
       } else {
         setRowMsg((prev) => ({
           ...prev,
-          [userId]: 'تعذر حذف المستخدم، حاول مرة أخرى.',
+          [userId]: 'تعذر حذف المستخدم، حاول مرة أخرى.'
         }));
       }
     } catch (e) {
@@ -244,12 +282,12 @@ export default function AdminDashboard({ onCancel, defaultTab = 'users' }) {
     try {
       const res = await api('/api/admin/users/send-notification', {
         method: 'POST',
-        body: { userId, type: 'expiry_reminder' },
+        body: { userId, type: 'expiry_reminder' }
       });
       if (res?.data?.sent) {
         setRowMsg((prev) => ({
           ...prev,
-          [userId]: `✅ تم إرسال التنبيه بنجاح إلى ${res.data.email}`,
+          [userId]: `✅ تم إرسال التنبيه بنجاح إلى ${res.data.email}`
         }));
         setTimeout(() => {
           setRowMsg((prev) => ({ ...prev, [userId]: '' }));
@@ -257,7 +295,7 @@ export default function AdminDashboard({ onCancel, defaultTab = 'users' }) {
       } else {
         setRowMsg((prev) => ({
           ...prev,
-          [userId]: 'تعذر إرسال التنبيه، حاول مرة أخرى.',
+          [userId]: 'تعذر إرسال التنبيه، حاول مرة أخرى.'
         }));
       }
     } catch (e) {
@@ -306,7 +344,7 @@ export default function AdminDashboard({ onCancel, defaultTab = 'users' }) {
     } catch (e) {
       setRowMsg((prev) => ({
         ...prev,
-        [userId]: 'تعذر إغلاق الملاحظة، حاول مرة أخرى.',
+        [userId]: 'تعذر إغلاق الملاحظة، حاول مرة أخرى.'
       }));
     } finally {
       setRowBusy(userId, false);
@@ -337,6 +375,20 @@ export default function AdminDashboard({ onCancel, defaultTab = 'users' }) {
             المشتركين
           </button>
           <button
+            onClick={() => setActiveTab('guest-support')}
+            className={`text-lg font-bold transition-colors relative ${
+              activeTab === 'guest-support'
+                ? 'text-white border-b-2 border-brand-primary'
+                : 'text-gray-400 hover:text-white'
+            }`}>
+            طلبات الضيوف
+            {guestSupport.length > 0 && activeTab !== 'guest-support' && (
+              <span className="absolute -top-1 -right-2 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse">
+                {guestSupport.length}
+              </span>
+            )}
+          </button>
+          <button
             onClick={() => setActiveTab('testimonials')}
             className={`text-lg font-bold transition-colors ${
               activeTab === 'testimonials'
@@ -364,6 +416,14 @@ export default function AdminDashboard({ onCancel, defaultTab = 'users' }) {
               تحديث
             </button>
           )}
+          {activeTab === 'guest-support' && (
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={loadGuestSupport}
+              disabled={guestSupportLoading}>
+              تحديث
+            </button>
+          )}
           {activeTab === 'pricing' && (
             <button
               className="btn btn-primary btn-sm"
@@ -384,6 +444,138 @@ export default function AdminDashboard({ onCancel, defaultTab = 'users' }) {
         {activeTab === 'testimonials' ? (
           <div className="p-4 h-full">
             <TestimonialsManager />
+          </div>
+        ) : activeTab === 'guest-support' ? (
+          <div className="p-4 h-full">
+            {guestSupportLoading ? (
+              <div className="flex items-center justify-center h-32">
+                <Loader className="w-8 h-8 animate-spin text-brand-primary" />
+              </div>
+            ) : guestSupport.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+                <svg
+                  className="w-16 h-16 mb-4 opacity-30"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+                  />
+                </svg>
+                <p className="text-lg">لا توجد طلبات دعم من ضيوف</p>
+                <p className="text-sm mt-2 opacity-60">
+                  طلبات الدعم من المستخدمين غير المسجلين ستظهر هنا
+                </p>
+              </div>
+            ) : (
+              <div className="max-w-4xl mx-auto space-y-4">
+                <div className="mb-6">
+                  <h2 className="text-2xl font-bold text-white mb-2">
+                    طلبات الدعم من الضيوف
+                  </h2>
+                  <p className="text-gray-400">
+                    طلبات الدعم من المستخدمين غير المسجلين (
+                    {guestSupport.length} طلب)
+                  </p>
+                </div>
+
+                {guestSupport.map((req) => (
+                  <div
+                    key={req.id}
+                    className="bg-white/5 border border-white/10 rounded-2xl p-5 hover:border-brand-primary/30 transition-all">
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex flex-wrap items-center gap-3">
+                        {req.email && (
+                          <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-lg">
+                            <svg
+                              className="w-4 h-4 text-gray-400"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor">
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                              />
+                            </svg>
+                            <span className="text-sm text-gray-300 font-mono">
+                              {req.email}
+                            </span>
+                          </div>
+                        )}
+                        {req.phone && (
+                          <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-lg">
+                            <svg
+                              className="w-4 h-4 text-gray-400"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor">
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                              />
+                            </svg>
+                            <span className="text-sm text-gray-300">
+                              {req.phone}
+                            </span>
+                          </div>
+                        )}
+                        {req.is_new_user && (
+                          <span className="px-2 py-1 bg-brand-primary/20 text-brand-primary text-xs rounded-lg">
+                            مستخدم جديد
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-xs text-gray-500">
+                        {new Date(req.created_at).toLocaleString('ar-SA')}
+                      </span>
+                    </div>
+
+                    <div className="bg-black/20 rounded-xl p-4 mb-4">
+                      <p className="text-gray-200 leading-relaxed whitespace-pre-wrap">
+                        {req.message}
+                      </p>
+                    </div>
+
+                    <div className="flex justify-end">
+                      <button
+                        className="btn btn-secondary btn-sm flex items-center gap-2"
+                        onClick={() => closeGuestSupportRequest(req.id)}
+                        disabled={guestSupportClosing[req.id]}>
+                        {guestSupportClosing[req.id] ? (
+                          <>
+                            <Loader className="w-4 h-4 animate-spin" />
+                            جاري الإغلاق...
+                          </>
+                        ) : (
+                          <>
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor">
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                            إغلاق الطلب
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         ) : activeTab === 'pricing' ? (
           <div className="p-4 h-full">
@@ -459,7 +651,7 @@ export default function AdminDashboard({ onCancel, defaultTab = 'users' }) {
                                     )
                                   );
                                   updatePlan(plan.plan_id, {
-                                    price_cents: newPrice,
+                                    price_cents: newPrice
                                   });
                                 }}
                                 className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
