@@ -112,12 +112,8 @@ export default function Layout({ left, right }) {
 
         {/* Mobile Sidebar Overlay */}
         {mobileMenuOpen && (
-          <div className="fixed inset-0 z-50 md:hidden flex justify-end">
-            <div
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-              onClick={() => setMobileMenuOpen(false)}
-            />
-            <aside className="relative w-72 bg-brand-dark border-l border-white/10 flex flex-col p-5 h-full animate-slide-in-right overflow-y-auto">
+          <div className="fixed inset-0 z-50 md:hidden flex justify-start">
+            <aside className="relative w-72 bg-brand-dark border-r border-white/10 flex flex-col p-5 h-full animate-slide-in-left overflow-y-auto">
               <button
                 className="absolute top-4 left-4 text-gray-400 hover:text-white"
                 onClick={() => setMobileMenuOpen(false)}>
@@ -134,8 +130,16 @@ export default function Layout({ left, right }) {
                   />
                 </svg>
               </button>
-              <div className="mt-8">{left}</div>
+              <div className="mt-8">
+                {React.cloneElement(left, {
+                  onCloseMobile: () => setMobileMenuOpen(false),
+                })}
+              </div>
             </aside>
+            <div
+              className="flex-1 bg-black/60 backdrop-blur-sm"
+              onClick={() => setMobileMenuOpen(false)}
+            />
           </div>
         )}
 

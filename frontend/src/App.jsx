@@ -6,6 +6,8 @@ import VerifyOtp from './pages/VerifyOtp';
 import Layout from './components/Layout';
 import CampaignBuilder from './components/CampaignBuilder';
 import ResultsCard from './components/ResultsCard';
+import HashtagsDisplay from './components/HashtagsDisplay';
+import PlatformTips from './components/PlatformTips';
 import RightSidebar from './components/RightSidebar';
 import ProfileCard from './components/ProfileCard';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -38,6 +40,8 @@ function EntryRoute() {
 
 function AppShell() {
   const [outputs, setOutputs] = useState({});
+  const [regeneratingPlatform, setRegeneratingPlatform] = useState(null);
+  const campaignBuilderRef = React.useRef(null);
   const [generating, setGenerating] = useState(false);
   const [view, setView] = useState('dashboard');
   const [chatOpen, setChatOpen] = useState(false);
@@ -130,6 +134,36 @@ function AppShell() {
 
   let right;
 
+  const resultsRef = React.useRef(null);
+  const prevOutputsCountRef = React.useRef(0);
+
+  React.useEffect(() => {
+    const currentCount = outputs ? Object.keys(outputs).length : 0;
+    const prevCount = prevOutputsCountRef.current;
+
+    if (resultsRef.current && currentCount > 0 && prevCount === 0) {
+      setTimeout(() => {
+        resultsRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
+      }, 300);
+    }
+    prevOutputsCountRef.current = currentCount;
+  }, [outputs]);
+
+  const handleRegenerate = async (platform) => {
+    if (!platform || !campaignBuilderRef.current) return;
+    setRegeneratingPlatform(platform);
+    try {
+      await campaignBuilderRef.current.regeneratePlatform(platform);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setRegeneratingPlatform(null);
+    }
+  };
+
   if (view === 'dashboard') {
     right = (
       <div className="main-layout" style={{ display: 'block' }}>
@@ -151,6 +185,15 @@ function AppShell() {
         <AdminDashboard onCancel={() => setView('dashboard')} />
       </div>
     );
+  } else if (view === 'admin-pricing') {
+    right = (
+      <div className="main-layout">
+        <AdminDashboard
+          onCancel={() => setView('dashboard')}
+          defaultTab="pricing"
+        />
+      </div>
+    );
   } else if (view === 'closed-notes') {
     right = (
       <div className="main-layout">
@@ -166,15 +209,33 @@ function AppShell() {
   } else {
     // builder view
     right = (
-      <div className="main-layout">
-        <CampaignBuilder
-          onGenerated={setOutputs}
-          onGenerating={setGenerating}
-          hasResults={Object.keys(outputs || {}).length > 0}
-          onResetOutputs={() => setOutputs({})}
+      <div className="main-layout grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-4 mt-2 flex-t ">
+        <div className="flex flex-col gap-4">
+          <CampaignBuilder
+            ref={campaignBuilderRef}
+            onGenerated={setOutputs}
+            onGenerating={setGenerating}
+            hasResults={Object.keys(outputs || {}).length > 0}
+            onResetOutputs={() => setOutputs({})}
+            outputs={outputs}
+          />
+          {outputs?.hashtags && (
+            <div className="card-glass p-5">
+              <HashtagsDisplay hashtags={outputs.hashtags} />
+            </div>
+          )}
+          {outputs?.platform_tips && (
+            <div className="card-glass p-5">
+              <PlatformTips platform_tips={outputs.platform_tips} />
+            </div>
+          )}
+        </div>
+        <ResultsCard
           outputs={outputs}
+          ref={resultsRef}
+          onRegenerate={handleRegenerate}
+          regeneratingPlatform={regeneratingPlatform}
         />
-        <ResultsCard outputs={outputs} />
       </div>
     );
   }
@@ -233,6 +294,36 @@ function AppShell() {
         onDone={() => setMustChangePassword(false)}
       />
       <SubscriptionPrompt open={shouldBlock} onClose={() => {}} strict />
+      {Object.keys(outputs || {}).length > 0 &&
+        view !== 'dashboard' &&
+        view !== 'profile' &&
+        view !== 'admin' &&
+        view !== 'admin-pricing' &&
+        view !== 'closed-notes' &&
+        view !== 'subscription' && (
+          <button
+            onClick={() =>
+              resultsRef.current?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start',
+              })
+            }
+            className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-brand-primary text-white p-3 rounded-full shadow-lg shadow-brand-primary/40 animate-bounce transition-all hover:bg-brand-primary/90"
+            aria-label="Scroll to results">
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 14l-7 7m0 0l-7-7m7 7V3"
+              />
+            </svg>
+          </button>
+        )}
     </>
   );
 }

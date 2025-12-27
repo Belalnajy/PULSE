@@ -15,6 +15,7 @@ export default function RightSidebar({
   currentView,
   chatOpen,
   setChatOpen,
+  onCloseMobile,
 }) {
   const { user, subscription, loadMe } = useAuth();
   const [notice, setNotice] = useState('');
@@ -258,7 +259,7 @@ export default function RightSidebar({
           />
         </svg>
       ),
-      action: () => (window.location.href = '/admin/pricing'),
+      action: () => onNavigate?.('admin-pricing'),
     });
   }
 
@@ -301,6 +302,7 @@ export default function RightSidebar({
               onClick={() => {
                 if (item.action) item.action();
                 else onNavigate?.(item.key);
+                onCloseMobile?.();
               }}>
               <span className="text-lg w-5 text-center flex items-center justify-center">
                 {item.icon}

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import { Banknote, Save, Loader } from 'lucide-react';
 
 import TestimonialsManager from '../components/TestimonialsManager';
 
@@ -18,9 +19,9 @@ function computeRemainingDays(expiresAt) {
   return Number.isFinite(diff) ? diff : null;
 }
 
-export default function AdminDashboard({ onCancel }) {
+export default function AdminDashboard({ onCancel, defaultTab = 'users' }) {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('users'); // users, testimonials
+  const [activeTab, setActiveTab] = useState(defaultTab); // users, testimonials, pricing
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -28,6 +29,12 @@ export default function AdminDashboard({ onCancel }) {
   const [rowMsg, setRowMsg] = useState({});
   const [openUserSupport, setOpenUserSupport] = useState(null);
   const [supportByUser, setSupportByUser] = useState({});
+
+  // Pricing states
+  const [plans, setPlans] = useState([]);
+  const [plansLoading, setPlansLoading] = useState(false);
+  const [plansSaving, setPlansSaving] = useState(null);
+  const [plansMessage, setPlansMessage] = useState({ type: '', text: '' });
 
   const isAdmin = useMemo(() => user?.email === 'Alva@admin.com', [user]);
 
@@ -55,6 +62,55 @@ export default function AdminDashboard({ onCancel }) {
     }
   }
 
+  // Pricing functions
+  async function loadPlans() {
+    try {
+      setPlansLoading(true);
+      const res = await api('/api/plans');
+      setPlans(res.data || []);
+    } catch (e) {
+      setPlansMessage({ type: 'error', text: 'فشل في تحميل الباقات' });
+    } finally {
+      setPlansLoading(false);
+    }
+  }
+
+  async function updatePlan(planId, updates) {
+    try {
+      setPlansSaving(planId);
+      await api(`/api/plans/${planId}`, {
+        method: 'PUT',
+        body: updates,
+      });
+      setPlansMessage({ type: 'success', text: 'تم التحديث بنجاح' });
+      await loadPlans();
+      setTimeout(() => setPlansMessage({ type: '', text: '' }), 3000);
+    } catch (e) {
+      setPlansMessage({ type: 'error', text: e.message || 'فشل في التحديث' });
+    } finally {
+      setPlansSaving(null);
+    }
+  }
+
+  function handlePriceChange(planId, newPrice) {
+    const priceCents = Math.round(parseFloat(newPrice) * 100);
+    if (isNaN(priceCents) || priceCents < 0) return;
+
+    setPlans(
+      plans.map((p) =>
+        p.plan_id === planId ? { ...p, price_cents: priceCents } : p
+      )
+    );
+  }
+
+  function handleSavePlan(plan) {
+    updatePlan(plan.plan_id, {
+      price_cents: plan.price_cents,
+      name: plan.name,
+      description: plan.description,
+    });
+  }
+
   useEffect(() => {
     if (!user) return;
     if (!isAdmin) {
@@ -63,6 +119,13 @@ export default function AdminDashboard({ onCancel }) {
     }
     loadUsers();
   }, [user, isAdmin]);
+
+  // Load plans when pricing tab is active
+  useEffect(() => {
+    if (activeTab === 'pricing' && plans.length === 0) {
+      loadPlans();
+    }
+  }, [activeTab]);
 
   function setRowBusy(userId, busy) {
     setRowLoading((prev) => ({ ...prev, [userId]: !!busy }));
@@ -176,6 +239,37 @@ export default function AdminDashboard({ onCancel }) {
     }
   }
 
+  async function sendNotification(userId) {
+    setRowBusy(userId, true);
+    try {
+      const res = await api('/api/admin/users/send-notification', {
+        method: 'POST',
+        body: { userId, type: 'expiry_reminder' },
+      });
+      if (res?.data?.sent) {
+        setRowMsg((prev) => ({
+          ...prev,
+          [userId]: `✅ تم إرسال التنبيه بنجاح إلى ${res.data.email}`,
+        }));
+        setTimeout(() => {
+          setRowMsg((prev) => ({ ...prev, [userId]: '' }));
+        }, 5000);
+      } else {
+        setRowMsg((prev) => ({
+          ...prev,
+          [userId]: 'تعذر إرسال التنبيه، حاول مرة أخرى.',
+        }));
+      }
+    } catch (e) {
+      const msg = e?.message?.includes('NO_SUBSCRIPTION')
+        ? 'المستخدم ليس لديه اشتراك نشط.'
+        : 'تعذر إرسال التنبيه، حاول مرة أخرى.';
+      setRowMsg((prev) => ({ ...prev, [userId]: msg }));
+    } finally {
+      setRowBusy(userId, false);
+    }
+  }
+
   async function toggleSupport(userId) {
     const isOpen = openUserSupport === userId;
     if (isOpen) {
@@ -251,6 +345,15 @@ export default function AdminDashboard({ onCancel }) {
             }`}>
             التقييمات
           </button>
+          <button
+            onClick={() => setActiveTab('pricing')}
+            className={`text-lg font-bold transition-colors ${
+              activeTab === 'pricing'
+                ? 'text-white border-b-2 border-brand-primary'
+                : 'text-gray-400 hover:text-white'
+            }`}>
+            إدارة الأسعار
+          </button>
         </div>
         <div className="flex gap-2">
           {activeTab === 'users' && (
@@ -258,6 +361,14 @@ export default function AdminDashboard({ onCancel }) {
               className="btn btn-primary btn-sm"
               onClick={loadUsers}
               disabled={loading}>
+              تحديث
+            </button>
+          )}
+          {activeTab === 'pricing' && (
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={loadPlans}
+              disabled={plansLoading}>
               تحديث
             </button>
           )}
@@ -273,6 +384,197 @@ export default function AdminDashboard({ onCancel }) {
         {activeTab === 'testimonials' ? (
           <div className="p-4 h-full">
             <TestimonialsManager />
+          </div>
+        ) : activeTab === 'pricing' ? (
+          <div className="p-4 h-full">
+            {plansLoading ? (
+              <div className="flex items-center justify-center h-32">
+                <Loader className="w-8 h-8 animate-spin text-brand-primary" />
+              </div>
+            ) : (
+              <div className="max-w-4xl mx-auto">
+                <div className="mb-6">
+                  <h2 className="text-2xl font-bold text-white mb-2">
+                    إدارة الأسعار
+                  </h2>
+                  <p className="text-gray-400">
+                    تعديل أسعار الباقات والاشتراكات
+                  </p>
+                </div>
+
+                {plansMessage.text && (
+                  <div
+                    className={`mb-6 p-4 rounded-xl ${
+                      plansMessage.type === 'success'
+                        ? 'bg-green-500/10 border border-green-500/20 text-green-400'
+                        : 'bg-red-500/10 border border-red-500/20 text-red-400'
+                    }`}>
+                    {plansMessage.text}
+                  </div>
+                )}
+
+                <div className="space-y-6">
+                  {plans.map((plan) => (
+                    <div
+                      key={plan.plan_id}
+                      className="bg-white/5 border border-white/10 rounded-2xl p-6 hover:border-brand-primary/30 transition-all">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <h3 className="text-xl font-bold text-white mb-1">
+                            {plan.name}
+                          </h3>
+                          <p className="text-sm text-gray-400">
+                            {plan.plan_id}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 text-brand-primary">
+                          <Banknote className="w-5 h-5" />
+                          <span className="text-2xl font-bold">
+                            {(plan.price_cents / 100).toFixed(0)}
+                          </span>
+                          <span className="text-sm text-gray-400">
+                            {plan.currency}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-4 mb-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-400 mb-3">
+                            السعر ({plan.currency})
+                          </label>
+
+                          {/* Quick Price Buttons */}
+                          <div className="flex gap-2 mb-3">
+                            {[25, 50, 75, 100, 200].map((price) => (
+                              <button
+                                key={price}
+                                onClick={() => {
+                                  const newPrice = price * 100;
+                                  setPlans(
+                                    plans.map((p) =>
+                                      p.plan_id === plan.plan_id
+                                        ? { ...p, price_cents: newPrice }
+                                        : p
+                                    )
+                                  );
+                                  updatePlan(plan.plan_id, {
+                                    price_cents: newPrice,
+                                  });
+                                }}
+                                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                                  plan.price_cents === price * 100
+                                    ? 'bg-brand-primary text-white'
+                                    : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
+                                }`}>
+                                {price} {plan.currency}
+                              </button>
+                            ))}
+                          </div>
+
+                          {/* Price Input with +/- Controls */}
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => {
+                                const newPrice = Math.max(
+                                  0,
+                                  plan.price_cents - 500
+                                );
+                                setPlans(
+                                  plans.map((p) =>
+                                    p.plan_id === plan.plan_id
+                                      ? { ...p, price_cents: newPrice }
+                                      : p
+                                  )
+                                );
+                              }}
+                              className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-white font-bold transition-all">
+                              −
+                            </button>
+
+                            <div className="flex-1 relative">
+                              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-bold">
+                                {plan.currency}
+                              </span>
+                              <input
+                                type="number"
+                                step="5"
+                                min="0"
+                                value={(plan.price_cents / 100).toFixed(0)}
+                                onChange={(e) =>
+                                  handlePriceChange(
+                                    plan.plan_id,
+                                    e.target.value
+                                  )
+                                }
+                                className="w-full pl-8 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-lg font-bold text-center focus:border-brand-primary focus:outline-none"
+                              />
+                            </div>
+
+                            <button
+                              onClick={() => {
+                                const newPrice = plan.price_cents + 500;
+                                setPlans(
+                                  plans.map((p) =>
+                                    p.plan_id === plan.plan_id
+                                      ? { ...p, price_cents: newPrice }
+                                      : p
+                                  )
+                                );
+                              }}
+                              className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-white font-bold transition-all">
+                              +
+                            </button>
+                          </div>
+
+                          <p className="text-xs text-gray-500 mt-2">
+                            استخدم الأزرار للتغيير السريع أو اكتب السعر مباشرة
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-400 mb-2">
+                          الوصف
+                        </label>
+                        <textarea
+                          value={plan.description || ''}
+                          onChange={(e) =>
+                            setPlans(
+                              plans.map((p) =>
+                                p.plan_id === plan.plan_id
+                                  ? { ...p, description: e.target.value }
+                                  : p
+                              )
+                            )
+                          }
+                          rows={2}
+                          className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white focus:border-brand-primary focus:outline-none resize-none"
+                          placeholder="وصف الباقة..."
+                        />
+                      </div>
+
+                      <button
+                        onClick={() => handleSavePlan(plan)}
+                        disabled={plansSaving === plan.plan_id}
+                        className="btn btn-primary w-full md:w-auto px-6 py-2 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                        {plansSaving === plan.plan_id ? (
+                          <>
+                            <Loader className="w-4 h-4 animate-spin" />
+                            جاري الحفظ...
+                          </>
+                        ) : (
+                          <>
+                            <Save className="w-4 h-4" />
+                            حفظ التغييرات
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <>
@@ -375,6 +677,16 @@ export default function AdminDashboard({ onCancel }) {
                         onClick={() => deleteUser(u.id)}
                         disabled={!!rowLoading[u.id]}>
                         حذف
+                      </button>
+                      <button
+                        className="px-2 py-1 bg-brand-primary/10 hover:bg-brand-primary/20 text-[10px] rounded text-brand-primary border border-brand-primary/20"
+                        onClick={() => sendNotification(u.id)}
+                        disabled={
+                          !!rowLoading[u.id] ||
+                          u.subscriptionStatus !== 'active'
+                        }
+                        title="إرسال تنبيه انتهاء الاشتراك">
+                        📧 تنبيه
                       </button>
                       <button
                         type="button"

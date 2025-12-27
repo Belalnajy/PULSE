@@ -245,6 +245,17 @@ async function initDb() {
     })
   );
 
+  // Add last_reminder_sent column to subscriptions for expiry email tracking
+  const hasLastReminderSent = await db.schema.hasColumn(
+    'subscriptions',
+    'last_reminder_sent'
+  );
+  if (!hasLastReminderSent) {
+    await db.schema.alterTable('subscriptions', (t) => {
+      t.datetime('last_reminder_sent').nullable();
+    });
+  }
+
   await ensure('payments_sessions', (s) =>
     s.createTable('payments_sessions', (t) => {
       t.increments('id').primary();

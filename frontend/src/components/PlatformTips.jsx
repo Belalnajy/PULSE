@@ -1,4 +1,24 @@
 import React from 'react';
+import { FaTiktok, FaInstagram, FaSnapchat, FaWhatsapp } from 'react-icons/fa';
+import { FaXTwitter } from 'react-icons/fa6';
+
+function getPlatformIcon(platform) {
+  const p = String(platform || '').toLowerCase();
+  switch (p) {
+    case 'tiktok':
+      return <FaTiktok className="w-5 h-5" />;
+    case 'instagram':
+      return <FaInstagram className="w-5 h-5 text-[#E4405F]" />;
+    case 'x':
+      return <FaXTwitter className="w-5 h-5" />;
+    case 'snapchat':
+      return <FaSnapchat className="w-5 h-5 text-[#FFFC00]" />;
+    case 'whatsapp':
+      return <FaWhatsapp className="w-5 h-5 text-[#25D366]" />;
+    default:
+      return null;
+  }
+}
 
 export default function PlatformTips({ platform_tips }) {
   if (!platform_tips || Object.keys(platform_tips).length === 0) return null;
@@ -33,14 +53,6 @@ export default function PlatformTips({ platform_tips }) {
 }
 
 function PlatformTipCard({ platform, tips }) {
-  const platformIcons = {
-    TikTok: '🎵',
-    Instagram: '📸',
-    X: '🐦',
-    Snapchat: '👻',
-    WhatsApp: '💬',
-  };
-
   const platformColors = {
     TikTok: 'from-pink-500/20 to-cyan-500/20',
     Instagram: 'from-purple-500/20 to-pink-500/20',
@@ -56,7 +68,9 @@ function PlatformTipCard({ platform, tips }) {
       }`}>
       {/* Platform Header */}
       <div className="flex items-center gap-3 mb-4 pb-3 border-b border-white/10">
-        <span className="text-2xl">{platformIcons[platform] || '📱'}</span>
+        <div className="p-2 rounded-lg bg-white/10 flex items-center justify-center">
+          {getPlatformIcon(platform)}
+        </div>
         <h4 className="text-lg font-bold text-white">{platform}</h4>
       </div>
 

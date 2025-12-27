@@ -256,6 +256,7 @@ export default function Welcome() {
             color="brand-secondary"
             title="سرعة خارقة"
             description="أنشئ محتوى مخصص لكل منصة (TikTok, Instagram, X) بضغطة زر واحدة."
+            onClick={() => scrollToSection('how-it-works')}
           />
           <FeatureCard
             number="02"
@@ -263,13 +264,14 @@ export default function Welcome() {
             color="brand-primary"
             title="ذكاء يتكيف معك"
             description="مساعدنا Alva يعرف هويتك، ويتحدث بأسلوبك، ويقترح عليك الأفضل دائماً."
+            onClick={() => scrollToSection('how-it-works')}
           />
           <FeatureCard
             number="03"
             icon={<Globe className="w-10 h-10" />}
             color="purple-400"
-            title="انتشار أوسع"
             description="استراتيجيات مبنية على بيانات واقعية تضمن وصول محتواك للجمهور الصحيح."
+            onClick={() => scrollToSection('how-it-works')}
           />
         </div>
         {/* Trust & Stats Section */}
@@ -783,7 +785,7 @@ export default function Welcome() {
   );
 }
 
-function FeatureCard({ number, icon, title, description, color }) {
+function FeatureCard({ number, icon, title, description, color, onClick }) {
   return (
     <div className="card-glass-premium p-10 group hover:bg-white/3 transition-all duration-500 border border-white/5 hover:border-white/10 rounded-3xl relative overflow-hidden card-hover-lift">
       {/* Number Badge */}
@@ -807,10 +809,12 @@ function FeatureCard({ number, icon, title, description, color }) {
         {description}
       </p>
 
-      <div className="mt-8 flex items-center gap-2 text-sm font-bold text-gray-500 group-hover:text-white transition-colors relative z-10">
+      <button
+        onClick={onClick}
+        className="mt-8 flex items-center gap-2 text-sm font-bold text-gray-500 group-hover:text-white transition-colors relative z-10 cursor-pointer hover:underline">
         <span>اكتشف التفاصيل</span>
         <ArrowLeft className="w-4 h-4 translate-x-0 group-hover:-translate-x-1 transition-transform" />
-      </div>
+      </button>
     </div>
   );
 }

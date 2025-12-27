@@ -8,6 +8,7 @@ const {
   activateSubscription,
   expireSubscription,
 } = require('../services/payment');
+const { sendExpiryReminderEmail } = require('../services/email');
 
 const router = express.Router();
 
@@ -15,21 +16,17 @@ function adminOnly(req, res, next) {
   try {
     const adminEmail = process.env.ADMIN_EMAIL || 'Alva@admin.com';
     if (!req.user || req.user.email !== adminEmail) {
-      return res
-        .status(403)
-        .json({
-          success: false,
-          error: { code: 'NOT_ADMIN', message: 'Admin access only' },
-        });
-    }
-    next();
-  } catch (e) {
-    return res
-      .status(403)
-      .json({
+      return res.status(403).json({
         success: false,
         error: { code: 'NOT_ADMIN', message: 'Admin access only' },
       });
+    }
+    next();
+  } catch (e) {
+    return res.status(403).json({
+      success: false,
+      error: { code: 'NOT_ADMIN', message: 'Admin access only' },
+    });
   }
 }
 
@@ -88,15 +85,13 @@ router.get('/users', async (req, res) => {
     res.json({ success: true, data: { users: result } });
   } catch (e) {
     logger.error({ err: e.message }, 'Admin users query failed');
-    res
-      .status(500)
-      .json({
-        success: false,
-        error: {
-          code: 'ADMIN_ERROR',
-          message: 'Unable to complete admin action.',
-        },
-      });
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'ADMIN_ERROR',
+        message: 'Unable to complete admin action.',
+      },
+    });
   }
 });
 
@@ -113,12 +108,10 @@ router.post('/subscriptions/activate', async (req, res) => {
         .json({ success: false, error: { code: 400, message: error.message } });
     const user = await db('users').where({ id: value.userId }).first();
     if (!user)
-      return res
-        .status(404)
-        .json({
-          success: false,
-          error: { code: 404, message: 'User not found' },
-        });
+      return res.status(404).json({
+        success: false,
+        error: { code: 404, message: 'User not found' },
+      });
     const sub = await activateSubscription(
       user.id,
       1,
@@ -129,15 +122,13 @@ router.post('/subscriptions/activate', async (req, res) => {
     res.json({ success: true, data: { subscription: sub } });
   } catch (e) {
     logger.error({ err: e.message }, 'Admin activate failed');
-    res
-      .status(500)
-      .json({
-        success: false,
-        error: {
-          code: 'ADMIN_ERROR',
-          message: 'Unable to complete admin action.',
-        },
-      });
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'ADMIN_ERROR',
+        message: 'Unable to complete admin action.',
+      },
+    });
   }
 });
 
@@ -150,26 +141,22 @@ router.post('/subscriptions/deactivate', async (req, res) => {
         .json({ success: false, error: { code: 400, message: error.message } });
     const user = await db('users').where({ id: value.userId }).first();
     if (!user)
-      return res
-        .status(404)
-        .json({
-          success: false,
-          error: { code: 404, message: 'User not found' },
-        });
+      return res.status(404).json({
+        success: false,
+        error: { code: 404, message: 'User not found' },
+      });
     const updated = await expireSubscription(user.id);
     logger.info({ userId: user.id }, 'Admin subscription deactivated');
     res.json({ success: true, data: { subscription: updated } });
   } catch (e) {
     logger.error({ err: e.message }, 'Admin deactivate failed');
-    res
-      .status(500)
-      .json({
-        success: false,
-        error: {
-          code: 'ADMIN_ERROR',
-          message: 'Unable to complete admin action.',
-        },
-      });
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'ADMIN_ERROR',
+        message: 'Unable to complete admin action.',
+      },
+    });
   }
 });
 
@@ -182,12 +169,10 @@ router.post('/users/reset-password', async (req, res) => {
         .json({ success: false, error: { code: 400, message: error.message } });
     const user = await db('users').where({ id: value.userId }).first();
     if (!user)
-      return res
-        .status(404)
-        .json({
-          success: false,
-          error: { code: 404, message: 'User not found' },
-        });
+      return res.status(404).json({
+        success: false,
+        error: { code: 404, message: 'User not found' },
+      });
 
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
     let pwd = '';
@@ -202,15 +187,13 @@ router.post('/users/reset-password', async (req, res) => {
     res.json({ success: true, userId: user.id, newPassword: pwd });
   } catch (e) {
     logger.error({ err: e.message }, 'Admin reset-password failed');
-    res
-      .status(500)
-      .json({
-        success: false,
-        error: {
-          code: 'ADMIN_ERROR',
-          message: 'Unable to complete admin action.',
-        },
-      });
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'ADMIN_ERROR',
+        message: 'Unable to complete admin action.',
+      },
+    });
   }
 });
 
@@ -223,21 +206,17 @@ router.post('/users/delete', async (req, res) => {
         .json({ success: false, error: { code: 400, message: error.message } });
     const user = await db('users').where({ id: value.userId }).first();
     if (!user)
-      return res
-        .status(404)
-        .json({
-          success: false,
-          error: { code: 404, message: 'User not found' },
-        });
+      return res.status(404).json({
+        success: false,
+        error: { code: 404, message: 'User not found' },
+      });
 
     const adminEmail = process.env.ADMIN_EMAIL || 'Alva@admin.com';
     if (user.email === adminEmail || user.is_admin) {
-      return res
-        .status(403)
-        .json({
-          success: false,
-          error: { code: 403, message: 'Cannot delete admin account' },
-        });
+      return res.status(403).json({
+        success: false,
+        error: { code: 403, message: 'Cannot delete admin account' },
+      });
     }
 
     await db('users').where({ id: user.id }).del();
@@ -245,15 +224,13 @@ router.post('/users/delete', async (req, res) => {
     res.json({ success: true, data: { deleted: true, userId: user.id } });
   } catch (e) {
     logger.error({ err: e.message }, 'Admin delete-user failed');
-    res
-      .status(500)
-      .json({
-        success: false,
-        error: {
-          code: 'ADMIN_ERROR',
-          message: 'Unable to complete admin action.',
-        },
-      });
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'ADMIN_ERROR',
+        message: 'Unable to complete admin action.',
+      },
+    });
   }
 });
 
@@ -261,21 +238,17 @@ router.get('/support/:userId', async (req, res) => {
   try {
     const userId = Number(req.params.userId);
     if (!Number.isInteger(userId) || userId < 1) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          error: { code: 400, message: 'Invalid userId' },
-        });
+      return res.status(400).json({
+        success: false,
+        error: { code: 400, message: 'Invalid userId' },
+      });
     }
     const user = await db('users').where({ id: userId }).first();
     if (!user)
-      return res
-        .status(404)
-        .json({
-          success: false,
-          error: { code: 'USER_NOT_FOUND', message: 'المستخدم غير موجود.' },
-        });
+      return res.status(404).json({
+        success: false,
+        error: { code: 'USER_NOT_FOUND', message: 'المستخدم غير موجود.' },
+      });
     const rows = await db('support_requests')
       .where(function () {
         this.where('user_id', user.id).orWhere(function () {
@@ -295,15 +268,13 @@ router.get('/support/:userId', async (req, res) => {
       );
     res.json({ success: true, data: { requests: rows } });
   } catch (e) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        error: {
-          code: 'SUPPORT_ERROR',
-          message: 'Unable to load support requests.',
-        },
-      });
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'SUPPORT_ERROR',
+        message: 'Unable to load support requests.',
+      },
+    });
   }
 });
 
@@ -311,35 +282,29 @@ router.patch('/support/:id/close', async (req, res) => {
   try {
     const id = Number(req.params.id);
     if (!Number.isInteger(id) || id < 1) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          error: { code: 400, message: 'Invalid request id' },
-        });
+      return res.status(400).json({
+        success: false,
+        error: { code: 400, message: 'Invalid request id' },
+      });
     }
     const existing = await db('support_requests').where({ id }).first();
     if (!existing) {
-      return res
-        .status(404)
-        .json({
-          success: false,
-          error: { code: 404, message: 'Support request not found' },
-        });
+      return res.status(404).json({
+        success: false,
+        error: { code: 404, message: 'Support request not found' },
+      });
     }
     await db('support_requests').where({ id }).update({ resolved: 1 });
     return res.json({ success: true });
   } catch (e) {
     logger.error({ err: e.message }, 'Admin support close failed');
-    return res
-      .status(500)
-      .json({
-        success: false,
-        error: {
-          code: 'ADMIN_ERROR',
-          message: 'Unable to complete admin action.',
-        },
-      });
+    return res.status(500).json({
+      success: false,
+      error: {
+        code: 'ADMIN_ERROR',
+        message: 'Unable to complete admin action.',
+      },
+    });
   }
 });
 
@@ -362,15 +327,124 @@ router.get('/support-closed', async (req, res) => {
     return res.json({ success: true, data: { requests: rows } });
   } catch (e) {
     logger.error({ err: e.message }, 'Admin support-closed failed');
-    return res
-      .status(500)
-      .json({
+    return res.status(500).json({
+      success: false,
+      error: {
+        code: 'ADMIN_ERROR',
+        message: 'Unable to complete admin action.',
+      },
+    });
+  }
+});
+
+// Send notification email to a user (subscription reminder)
+const notifySchema = Joi.object({
+  userId: Joi.number().integer().min(1).required(),
+  type: Joi.string()
+    .valid('expiry_reminder', 'welcome', 'custom')
+    .default('expiry_reminder'),
+  customMessage: Joi.string().max(1000).optional(),
+});
+
+router.post('/users/send-notification', async (req, res) => {
+  try {
+    const { error, value } = notifySchema.validate(req.body);
+    if (error) {
+      return res
+        .status(400)
+        .json({ success: false, error: { code: 400, message: error.message } });
+    }
+
+    const user = await db('users').where({ id: value.userId }).first();
+    if (!user) {
+      return res.status(404).json({
         success: false,
-        error: {
-          code: 'ADMIN_ERROR',
-          message: 'Unable to complete admin action.',
-        },
+        error: { code: 404, message: 'User not found' },
       });
+    }
+
+    // Get user's subscription info
+    const sub = await db('subscriptions')
+      .where({ user_id: user.id })
+      .orderBy('id', 'desc')
+      .first();
+
+    let daysLeft = null;
+    let expiryDate = null;
+
+    if (sub && sub.end_at) {
+      expiryDate = sub.end_at;
+      daysLeft = Math.ceil(
+        (new Date(sub.end_at).getTime() - Date.now()) / (24 * 60 * 60 * 1000)
+      );
+      if (daysLeft < 0) daysLeft = 0;
+    }
+
+    const userName = user.display_name || user.email.split('@')[0];
+
+    if (value.type === 'expiry_reminder') {
+      // Send expiry reminder email
+      if (!expiryDate) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'NO_SUBSCRIPTION',
+            message: 'المستخدم ليس لديه اشتراك نشط',
+          },
+        });
+      }
+
+      const emailResult = await sendExpiryReminderEmail(
+        user.email,
+        userName,
+        daysLeft || 0,
+        expiryDate
+      );
+
+      if (emailResult.success) {
+        // Update last reminder sent
+        await db('subscriptions')
+          .where({ id: sub.id })
+          .update({ last_reminder_sent: db.fn.now() });
+
+        logger.info(
+          { userId: user.id, type: 'expiry_reminder' },
+          'Admin sent notification'
+        );
+        return res.json({
+          success: true,
+          data: {
+            sent: true,
+            email: user.email,
+            type: 'expiry_reminder',
+            daysLeft,
+          },
+        });
+      } else {
+        return res.status(500).json({
+          success: false,
+          error: {
+            code: 'EMAIL_FAILED',
+            message: 'فشل في إرسال البريد الإلكتروني',
+          },
+        });
+      }
+    }
+
+    // For other types, return success (can be expanded later)
+    return res.json({
+      success: true,
+      data: { sent: true, email: user.email, type: value.type },
+    });
+  } catch (e) {
+    logger.error({ err: e.message }, 'Admin send-notification failed');
+    return res.status(500).json({
+      success: false,
+      error: {
+        code: 'ADMIN_ERROR',
+        message: 'Unable to complete admin action.',
+      },
+    });
   }
 });
 

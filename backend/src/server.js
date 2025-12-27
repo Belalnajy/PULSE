@@ -71,11 +71,15 @@ app.use('/testimonials', require('./routes/testimonials'));
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
+const { startReminderScheduler } = require('./services/subscriptionReminder');
+
 initDb()
   .then(() => {
-    app.listen(PORT, () =>
-      console.log(`Backend listening on http://localhost:${PORT}`)
-    );
+    app.listen(PORT, () => {
+      console.log(`Backend listening on http://localhost:${PORT}`);
+      // Start subscription expiry reminder scheduler
+      startReminderScheduler();
+    });
   })
   .catch((err) => {
     console.error('DB init failed:', err);

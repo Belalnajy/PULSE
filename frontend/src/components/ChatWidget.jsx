@@ -459,7 +459,7 @@ export default function ChatWidget({ open, onClose }) {
                   className="w-16 h-16 rounded-2xl opacity-50 grayscale"
                 />
                 <div className="text-sm">
-                  يا أهلاً بيك! أنا Alva، إزاي أقدر أساعدك النهاردة؟
+                  يا أهلاً بك! أنا Alva، كيف أقدر أساعدك اليوم
                 </div>
               </div>
             )}

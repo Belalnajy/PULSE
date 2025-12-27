@@ -1,4 +1,24 @@
 import React, { useState } from 'react';
+import { FaTiktok, FaInstagram, FaSnapchat, FaWhatsapp } from 'react-icons/fa';
+import { FaXTwitter } from 'react-icons/fa6';
+
+function getPlatformIcon(platform) {
+  const p = String(platform || '').toLowerCase();
+  switch (p) {
+    case 'tiktok':
+      return <FaTiktok className="w-4 h-4" />;
+    case 'instagram':
+      return <FaInstagram className="w-4 h-4 text-[#E4405F]" />;
+    case 'x':
+      return <FaXTwitter className="w-4 h-4" />;
+    case 'snapchat':
+      return <FaSnapchat className="w-4 h-4 text-[#FFFC00]" />;
+    case 'whatsapp':
+      return <FaWhatsapp className="w-4 h-4 text-[#25D366]" />;
+    default:
+      return null;
+  }
+}
 
 export default function HashtagsDisplay({ hashtags }) {
   const [copied, setCopied] = useState(false);
@@ -186,14 +206,6 @@ export default function HashtagsDisplay({ hashtags }) {
           </div>
         </div>
       )}
-
-      {/* Meta Info */}
-      {_meta.industry && (
-        <div className="text-xs text-gray-500 text-center pt-2">
-          تم اكتشاف المجال: {_meta.industry} • إجمالي الهاشتاقات:{' '}
-          {_meta.total_count}
-        </div>
-      )}
     </div>
   );
 }
@@ -256,6 +268,9 @@ function PlatformHashtagSet({ platform, tags, onCopy }) {
     <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5">
       <div className="flex-1">
         <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center justify-center p-1 rounded-md bg-white/5">
+            {getPlatformIcon(platform)}
+          </div>
           <span className="text-sm font-medium text-white">{platform}</span>
           <span className="text-xs text-gray-500">
             ({tags.length} هاشتاقات)
