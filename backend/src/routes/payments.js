@@ -207,7 +207,11 @@ router.get('/callback', async (req, res) => {
     const { id, status } = req.query; // Moyasar sends id and status as query params
     const frontendUrl = (process.env.CORS_ORIGIN || 'http://localhost:5173')
       .split(',')[0]
-      .trim();
+      .trim()
+      .replace(/\/+$/, ''); // Remove trailing slashes
+
+    console.log(`[Callback] Received callback with id=${id}, status=${status}`);
+    console.log(`[Callback] Will redirect to frontend: ${frontendUrl}`);
 
     if (!id) {
       console.error('[Callback] Missing payment ID in request');
@@ -319,7 +323,8 @@ router.get('/callback', async (req, res) => {
     console.error('Callback error:', e.message);
     const frontendUrl = (process.env.CORS_ORIGIN || 'http://localhost:5173')
       .split(',')[0]
-      .trim();
+      .trim()
+      .replace(/\/+$/, ''); // Remove trailing slashes
     return res.redirect(`${frontendUrl}/app?payment=error`);
   }
 });

@@ -27,13 +27,15 @@ class MoyasarProvider extends BaseProvider {
 
     // Redirect to backend callback for server-side verification and handling
     // This is the production best practice: Gateway -> Backend (Verify) -> Frontend
-    const apiBaseUrl =
+    const apiBaseUrl = (
       process.env.API_BASE_URL ||
-      `http://localhost:${process.env.PORT || 5000}`;
-    const callbackUrl = `${apiBaseUrl}/payments/callback`;
+      `http://localhost:${process.env.PORT || 5000}`
+    ).replace(/\/+$/, ''); // Remove trailing slashes
+    const callbackUrl = `${apiBaseUrl}/api/payments/callback`;
     console.log(
-      `[Moyasar] Creating invoice for user ${user.id}, plan ${planId}. Callback: ${callbackUrl}`
+      `[Moyasar] Creating invoice for user ${user.id}, plan ${planId}`
     );
+    console.log(`[Moyasar] Callback URL: ${callbackUrl}`);
 
     try {
       const response = await axios.post(
